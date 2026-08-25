@@ -10,6 +10,8 @@
  */
 
 const SYLLABLES = [
+  { id:'sy-e', shengmu:null, jiemu:null, yunmu:'e', base:'e', lesson:'lesson-01',
+    tones:[{tone:2, pinyin:'é', hanzi:'鹅', audio:'audio/syl/e2.mp3'}, {tone:4, pinyin:'è', hanzi:'饿', audio:'audio/syl/e4.mp3'}] },
   { id:'sy-ba', shengmu:'b', jiemu:null, yunmu:'a', base:'ba', lesson:'lesson-03',
     tones:[{tone:1, pinyin:'bā', hanzi:'八', audio:'audio/syl/ba1.mp3'}, {tone:3, pinyin:'bǎ', hanzi:'把', audio:'audio/syl/ba3.mp3'}, {tone:4, pinyin:'bà', hanzi:'爸', audio:'audio/syl/ba4.mp3'}] },
   { id:'sy-bi', shengmu:'b', jiemu:null, yunmu:'i', base:'bi', lesson:'lesson-03',
@@ -316,6 +318,8 @@ const SYLLABLES = [
     tones:[{tone:2, pinyin:'bié', hanzi:'别', audio:'audio/syl/bie2.mp3'}] },
   { id:'sy-die', shengmu:'d', jiemu:null, yunmu:'ie', base:'die', lesson:'lesson-12',
     tones:[{tone:2, pinyin:'dié', hanzi:'蝶', audio:'audio/syl/die2.mp3'}] },
+  { id:'sy-er', shengmu:null, jiemu:null, yunmu:'er', base:'er', lesson:'lesson-12',
+    tones:[{tone:2, pinyin:'ér', hanzi:'儿', audio:'audio/syl/er2.mp3'}, {tone:3, pinyin:'ěr', hanzi:'耳', audio:'audio/syl/er3.mp3'}, {tone:4, pinyin:'èr', hanzi:'二', audio:'audio/syl/er4.mp3'}] },
   { id:'sy-jie', shengmu:'j', jiemu:null, yunmu:'ie', base:'jie', lesson:'lesson-12',
     tones:[{tone:1, pinyin:'jiē', hanzi:'街', audio:'audio/syl/jie1.mp3'}, {tone:2, pinyin:'jié', hanzi:'结', audio:'audio/syl/jie2.mp3'}, {tone:3, pinyin:'jiě', hanzi:'姐', audio:'audio/syl/jie3.mp3'}, {tone:4, pinyin:'jiè', hanzi:'借', audio:'audio/syl/jie4.mp3'}] },
   { id:'sy-qie', shengmu:'q', jiemu:null, yunmu:'ie', base:'qie', lesson:'lesson-12',

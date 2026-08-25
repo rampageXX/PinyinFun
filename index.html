@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#1391AE">
   <!-- The child launches this from the iPad home screen, so it needs a real
        icon rather than a screenshot. tools/gen_icon.py draws it. -->
+  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-180.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <title>拼音岛</title>
@@ -226,5 +227,21 @@
   <script src="games/sharpEyes.js"></script>
   <script src="games/dailyMission.js"></script>
   <script src="app.js"></script>
+
+  <!--
+    Offline. The app makes no network calls of its own, so once the service
+    worker has the files the child can use it on a plane. Skipped on file://,
+    where service workers are unavailable and opening index.html directly is
+    still the dev loop.
+  -->
+  <script>
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {
+          /* Offline support is a bonus; never let it break the app. */
+        });
+      });
+    }
+  </script>
 </body>
 </html>

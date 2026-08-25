@@ -41,7 +41,11 @@ def base_url():
         def log_message(self, *a):
             pass
 
-    server = socketserver.TCPServer(("127.0.0.1", port), Handler)
+    class Server(socketserver.ThreadingTCPServer):
+        daemon_threads = True
+        allow_reuse_address = True
+
+    server = Server(("127.0.0.1", port), Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{port}"
     server.shutdown()
@@ -183,16 +187,18 @@ def test_mission_completes_and_records_progress(page):
         const s = JSON.parse(localStorage.getItem('pinyin_strengths') || '{}');
         return {
             items: Object.keys(s).length,
+            ids: Object.keys(s).sort(),
             attempts: Object.values(s).reduce((n, e) => n + e.attempts, 0),
             history: Object.keys(JSON.parse(localStorage.getItem('pinyin_history') || '{}')).length,
             streak: (JSON.parse(localStorage.getItem('pinyin_streak') || '{}')).current,
             done: missionDoneToday(),
         };
     }""")
-    # Lesson 1 contains only a o e, so all ten questions drill those three —
-    # what must hold is that every question recorded exactly one attempt.
+    # Lesson 1 is a o e plus the bare 韵母 e as a toned syllable — 课1's rule is
+    # 四声, so 声调小火车 has to have something to drill there. Nothing else is
+    # unlocked yet, so those four ids are exactly what a session can touch.
     assert state["attempts"] == 10, "each question should record one attempt"
-    assert state["items"] == 3, "lesson 1 has three sounds and nothing to review yet"
+    assert state["ids"] == ["sy-e", "yu-a", "yu-e", "yu-o"],         "lesson 1 drills a/o/e and the toned syllable e, and nothing else"
     assert state["history"] == 1
     assert state["streak"] == 1
     assert state["done"] is True
@@ -251,3 +257,64 @@ def test_tone_marks_land_on_the_right_vowel(page):
     assert cases["gui1"] == "guī"      # u i in sequence -> the last one
     assert cases["xue2"] == "xué"      # e when there is no a
     assert cases["zhong1"] == "zhōng"  # o when there is no a
+
+
+# ── offline ──────────────────────────────────────────────────────────
+
+def test_works_offline_after_one_visit(base_url):
+    """The whole point of the service worker: a plane, a car, no wifi.
+
+    Visit once online, then cut the network entirely and reload. The app must
+    still boot, still have its data, and still be able to play a sound.
+    """
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        ctx = browser.new_context(viewport={"width": 820, "height": 1180})
+        pg = ctx.new_page()
+        pg.goto(f"{base_url}/index.html")
+
+        # clients.claim() runs only after the precache loop finishes, so a
+        # controller means every file is on the device.
+        pg.wait_for_function(
+            "() => navigator.serviceWorker && navigator.serviceWorker.controller",
+            timeout=180_000,
+        )
+
+        ctx.set_offline(True)
+        pg.reload()
+        pg.wait_for_function("() => typeof SOUNDS !== 'undefined'", timeout=30_000)
+
+        state = pg.evaluate("""async () => {
+            const audio = await fetch('audio/syl/e2.mp3');
+            const keys = await caches.keys();
+            const cache = await caches.open(keys[0]);
+            return {
+                sounds: SOUNDS.length,
+                lessons: LESSONS.length,
+                syllables: SYLLABLES.length,
+                audioOk: audio.ok,
+                audioType: audio.headers.get('content-type'),
+                styled: getComputedStyle(document.body).backgroundColor,
+                controlled: !!navigator.serviceWorker.controller,
+                cacheNames: keys,
+                cached: (await cache.keys()).length,
+                // proof the bytes came from the cache and not Chromium's
+                // HTTP cache: ask the Cache API for them directly.
+                fromCache: !!(await caches.match(new URL('audio/syl/e2.mp3', location.href).href)),
+            };
+        }""")
+
+        assert state["sounds"] == 63, "sound data must survive offline"
+        assert state["lessons"] == 14
+        assert state["syllables"] > 200
+        assert state["audioOk"], "speech has to play with no network"
+        assert state["audioType"] == "audio/mpeg"
+        assert state["styled"] != "rgba(0, 0, 0, 0)", "stylesheet must be cached too"
+        # Without these the test would also pass on Chromium's own HTTP cache,
+        # which is evicted at will and would strand the child mid-flight.
+        assert state["controlled"], "the reload must be served by the service worker"
+        assert state["fromCache"], "audio must come from the Cache API"
+        assert len(state["cacheNames"]) == 1, f"one versioned cache, got {state['cacheNames']}"
+        assert state["cached"] > 600, f"expected the whole app precached, got {state['cached']}"
+
+        browser.close()

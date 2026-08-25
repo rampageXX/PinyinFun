@@ -65,6 +65,15 @@ LESSON_YUNMU = {
 MEDIALS = ["i", "u", "ü"]
 MEDIAL_FINALS = ["a", "o", "e", "ai", "ei", "ao", "ou", "an", "en", "ang", "eng", "ong"]
 
+# 韵母 that are already complete syllables with nothing in front of them.
+# This is what makes 声调小火车 possible in 课1 — the lesson whose entire rule
+# is 四声, but which has no 声母 yet and so had no syllable to drill.
+#
+# i/u/ü are deliberately absent: standing alone they are written yi/wu/yu,
+# which are 整体认读音节 and not taught until 课9. er is here because it never
+# takes an initial at all, so without this it could never be tone-drilled.
+STANDALONE_YUNMU = ["a", "o", "e", "er"]
+
 SHENGMU_LESSON = {s: n for n, xs in LESSON_SHENGMU.items() for s in xs}
 YUNMU_LESSON = {y: n for n, xs in LESSON_YUNMU.items() for y in xs}
 
@@ -246,6 +255,8 @@ def main():
     all_yunmu = [y for y in YUNMU_LESSON if y != "er"]   # er never takes an initial
 
     combos = []
+    for ym in STANDALONE_YUNMU:
+        combos.append(("", None, ym))       # a whole syllable on its own
     for sm in all_shengmu:
         for ym in all_yunmu:
             combos.append((sm, None, ym))
@@ -322,8 +333,9 @@ def main():
             for t in r["tones"]
         )
         jiemu = f"'{r['jiemu']}'" if r["jiemu"] else "null"
+        shengmu = f"'{r['shengmu']}'" if r["shengmu"] else "null"
         lines.append(
-            f"  {{ id:'{r['id']}', shengmu:'{r['shengmu']}', jiemu:{jiemu}, "
+            f"  {{ id:'{r['id']}', shengmu:{shengmu}, jiemu:{jiemu}, "
             f"yunmu:'{r['yunmu']}', base:'{r['base']}', lesson:'{r['lesson']}',\n"
             f"    tones:[{tones}] }},"
         )

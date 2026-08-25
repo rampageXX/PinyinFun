@@ -23,22 +23,25 @@ Playable end to end. All 14 lessons, all four minigames, the daily mission,
 the map, the sticker album and the parent dashboard are built and tested.
 
 - [x] `data/sounds.js` — 63 sounds (23 声母 + 24 韵母 + 16 整体认读音节)
-- [x] `data/syllables.js` — 277 syllables, 54 三拼, generated
-- [x] `audio/` — 641 MP3s
+- [x] `data/syllables.js` — 279 syllables, 54 三拼, generated
+- [x] `audio/` — 646 MP3s
 - [x] `data/lessons/lessons.js` — all 14 lessons
 - [x] four minigames + `dailyMission.js`
 - [x] progression, streaks, scoring, stickers, map, parent dashboard
 - [x] `tools/verify_data.py`, `tests/test_app.py` — 10 tests, all passing
 
 Not done: the 音频检查 pass with a human ear (see Audio), and using it with
-the child. Lessons 1–2 have no blendable syllables, so 拼一拼 and 声调小火车
-only start at lesson 3 — that is correct, not a gap.
+the child. Lessons 1–2 have no 声母, so 拼一拼 cannot run there — that is
+correct, not a gap. 声调小火车 does run in 课1 now, on the bare 韵母 `e`
+(é 鹅 / è 饿) — see 单韵母 as whole syllables below.
 
 ## Tech Stack
 
 - Vanilla HTML5 + CSS3 + JavaScript (ES6). **No npm, no framework, no build step.**
 - All state in `localStorage`, namespace `pinyin_`. No backend, no network, no accounts.
 - Audio: pre-generated MP3s in `audio/`, played by `lib/audio.js`.
+- Offline: `sw.js` precaches the whole app (673 files, 5 MB) so it runs with no
+  network at all. Generated — see Offline below.
 - Screens are `<section class="screen">` elements toggled with a `.hidden` class,
   exactly like Bonjourly. No router.
 - Data files are plain JS that assign to globals or call `registerLesson()`, loaded
@@ -79,6 +82,8 @@ of the app is that it tracks what the child is being taught at school that week.
 index.html          # every screen as a hidden section; script tags in dependency order
 styles.css          # island design system
 app.js              # screen rendering + navigation
+manifest.json       # PWA metadata — installs to the iPad home screen
+sw.js               # GENERATED offline cache (tools/gen_sw.py)
 data/
   sounds.js         # ✅ 63 sounds — the unit of spaced repetition
   syllables.js      # curriculum syllables, per-tone 汉字 + audio
@@ -103,6 +108,7 @@ tools/
   gen_audio.py      # audio generation
   gen_syllables.py  # generates data/syllables.js from the curriculum
   verify_data.py    # data integrity checks
+  gen_sw.py         # regenerates sw.js — run after gen_audio.py
 tests/test_app.py   # Playwright smoke test
 ```
 
@@ -156,10 +162,48 @@ Listen to those two first. Record replacements yourself into
 `audio/overrides/audio/yun/eng.mp3` and `.../ong.mp3`; `lib/audio.js` checks
 `overrides/` before the generated file, so no code change is needed.
 
+### 单韵母 as whole syllables
+
+课1's whole rule is 四声, but every syllable used to need a 声母, so the lesson
+that teaches tones had nothing for 声调小火车 to drill. `STANDALONE_YUNMU` in
+`gen_syllables.py` fixes that: a 韵母 that is already a complete syllable gets
+its own entry with `shengmu:null`. Today that is `e` (课1) and `er` (课12 — it
+never takes an initial, so it was otherwise undrillable).
+
+`a` and `o` are **not** there, and cannot be. Audio is synthesised from a 汉字
+that produces the reading, and ǎ/á/ō/ó have no character in common use — 啊 is
+read as one tone whatever mark you write. Giving 课1 a full four-tone drill on
+`a` needs hand-recorded clips in `audio/overrides/audio/syl/a1.mp3` … `a4.mp3`;
+drop them in and add `a` to `STANDALONE_YUNMU` with matching `OVERRIDES`.
+
+A 声母-less syllable must never reach 拼一拼 — there is nothing to blend.
+`buildSchedule()` filters them into `blendPool` separately for that reason.
+
 `lib/audio.js` API: `playAudio(src, onEnd)`, `playSequence([a,b,c], onEnd)` for
 拼读 (`b … ā … bā`), `preloadLesson(id)`, `speakFallback(text)`.
 iOS blocks audio until a user gesture — the 开始 button plays a silent buffer once
 to unlock playback for the session.
+
+## Offline
+
+The app never calls a network by itself — no backend, no accounts, no CDN, no
+fonts to fetch. The only reason it would need internet is that GitHub Pages has
+to hand over the files, so `sw.js` caches them on the device instead. After one
+online visit it runs on a plane, indefinitely.
+
+```bash
+python tools/gen_sw.py    # after gen_audio.py, or any change to the shell
+```
+
+`VERSION` in `sw.js` is a content hash of every cached file, so a redeploy drops
+the old cache rather than leaving a child with a half-updated app.
+`verify_data.py` fails if `sw.js` is stale — otherwise the app looks fine on a
+laptop and silently serves yesterday's audio on the iPad.
+
+The shell must cache or install fails; audio is best-effort, because one
+unreachable MP3 should not cost the whole offline app. Registration is skipped
+on `file://`, where service workers do not exist and opening `index.html`
+directly is still the dev loop.
 
 ## UI Conventions
 
@@ -191,16 +235,18 @@ guards each one:
 ## What is left
 
 - The 音频检查 pass by ear, especially `eng` and `ong`
-- Sound effects for correct/wrong/unlock
+- 课1's tone drill covers only `e`. `a` and `o` need hand-recorded tone clips
+  before they can join it — see 单韵母 as whole syllables under Audio.
 - Trying it with the child, and tuning from what actually confuses her
-- Optional: GitHub Pages deploy (already `.nojekyll`-ready)
+- Optional: GitHub Pages deploy (`.nojekyll`-ready; the service worker means
+  it only needs the network for the very first visit)
 
 ## Verification
 
 ```bash
 node -e "eval(require('fs').readFileSync('data/sounds.js','utf8')+';global.S=SOUNDS');console.log(S.length)"
-python tools/verify_data.py      # once written
-python -m pytest tests/          # Playwright smoke test, once written
+python tools/verify_data.py      # data + offline cache integrity
+python -m pytest tests/          # Playwright smoke test, 11 tests
 ```
 
 `verify_data.py` must check: every `audio:` path exists on disk or in `overrides/`;

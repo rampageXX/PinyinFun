@@ -3,8 +3,8 @@
 A browser app that teaches 汉语拼音 to a 7-year-old, following the lesson order of
 the **2024 秋 人教版（统编版）一年级上册语文** textbook.
 
-One child plus a parent dashboard. No install, no accounts, no backend, no build
-step — open `index.html` on an iPad and go.
+One child plus a parent dashboard. No accounts, no backend, no build step — open
+`index.html` on an iPad and go. Add it to the home screen and it works offline.
 
 ![The start screen](docs/screenshots/start.png)
 
@@ -74,6 +74,7 @@ python -m http.server 8777
 pip install edge-tts pypinyin
 python tools/gen_syllables.py     # rebuild the syllable inventory
 python tools/gen_audio.py         # synthesise anything missing, skip what exists
+python tools/gen_sw.py            # refresh the offline cache — after gen_audio
 python tools/verify_data.py       # integrity checks — run after any data change
 ```
 
@@ -87,6 +88,16 @@ Open 家长 → 音频检查, listen, and if they are wrong record replacements 
 `audio/overrides/audio/yun/eng.mp3` and `.../ong.mp3` — the player prefers an
 override whenever one exists.
 
+## Offline
+
+The app makes no network calls of its own — no backend, no accounts, no CDN.
+Served from GitHub Pages it needs the internet only for the *first* visit;
+`sw.js` then keeps all 673 files (5 MB, every MP3 included) on the device.
+
+Add it to the iPad home screen and it opens like an app and works on a plane.
+`verify_data.py` fails if `sw.js` is stale, so the cache cannot silently drift
+out of step with `audio/`.
+
 ## Tests
 
 ```bash
@@ -94,7 +105,8 @@ pip install playwright pytest && playwright install chromium
 python -m pytest tests/ -v
 ```
 
-Ten tests, covering the invariants that would otherwise break silently — that a
-mission completes and records progress, that mastering a lesson unlocks the next
-and awards its sticker, that tone marks land on the right vowel, and above all
-that **no screen ever offers a letter the child has not been taught yet**.
+Eleven tests, covering the invariants that would otherwise break silently — that
+a mission completes and records progress, that mastering a lesson unlocks the
+next and awards its sticker, that tone marks land on the right vowel, that the
+app still boots with the network cut, and above all that **no screen ever offers
+a letter the child has not been taught yet**.

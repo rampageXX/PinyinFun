@@ -168,7 +168,7 @@ for s in stickers:
 
 syl_src = read("syllables.js")
 syl_entries = re.findall(
-    r"id:'([^']+)', shengmu:'([^']+)', jiemu:(null|'[^']*'), yunmu:'([^']+)', "
+    r"id:'([^']+)', shengmu:(null|'[^']*'), jiemu:(null|'[^']*'), yunmu:'([^']+)', "
     r"base:'([^']+)', lesson:'([^']+)'", syl_src)
 
 if not syl_entries:
@@ -180,7 +180,9 @@ for s in sounds:
 
 for sid, sm, jm, ym, base, lesson in syl_entries:
     order = int(lesson[-2:])
-    for part, name in ((sm, "声母"), (ym, "韵母")):
+    # A bare 韵母 (课1's e, 课12's er) is a whole syllable with no 声母 at all.
+    parts = [(ym, "韵母")] if sm == "null" else [(sm.strip("'"), "声母"), (ym, "韵母")]
+    for part, name in parts:
         if part not in sound_text_lesson:
             fail(f"syllable {sid}: {name} '{part}' is not a known sound")
         elif sound_text_lesson[part] > order:
@@ -210,6 +212,36 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
+# ── service worker ───────────────────────────────────────────────────
+#
+# The offline cache is a generated list of files. If gen_audio.py adds an MP3
+# and nobody re-runs gen_sw.py, the app still works online and silently serves
+# a stale cache on the iPad — the worst kind of bug to find on a plane.
+
+sw_files = 0
+sw_path = ROOT / "sw.js"
+if not sw_path.exists():
+    fail("sw.js is missing — run: python tools/gen_sw.py")
+else:
+    sys.path.insert(0, str(ROOT / "tools"))
+    import gen_sw
+
+    sw_src = sw_path.read_text(encoding="utf-8")
+    tracked = gen_sw.collect(gen_sw.SHELL_GLOBS) + gen_sw.collect(gen_sw.AUDIO_GLOBS)
+    sw_files = len(tracked)
+
+    m = re.search(r"const VERSION = '([0-9a-f]+)'", sw_src)
+    if not m:
+        fail("sw.js has no VERSION — regenerate it with tools/gen_sw.py")
+    elif m.group(1) != gen_sw.version_of(tracked):
+        fail("sw.js is stale (VERSION does not match the files on disk) — "
+             "run: python tools/gen_sw.py")
+
+    uncached = [f for f in tracked if f"'{f}'" not in sw_src]
+    if uncached:
+        fail(f"{len(uncached)} files are not in the offline cache, "
+             f"e.g. {uncached[:5]} — run: python tools/gen_sw.py")
+
 # ── report ───────────────────────────────────────────────────────────
 
 print(f"sounds      {len(sounds)}   声母 {types.get('shengmu', 0)} · "
@@ -219,6 +251,7 @@ print(f"syllables   {len(syl_entries)}")
 print(f"stickers    {len(stickers)}")
 print(f"audio refs  {len(audio_refs)}")
 print(f"ruby pairs  {len(pairs)}")
+print(f"offline     {sw_files} files precached by sw.js")
 
 for n in notes:
     print(f"\nNOTE  {n}")

@@ -101,20 +101,35 @@ function buildSchedule(items, seed) {
   const sounds = items.sounds.filter(Boolean);
   const syllables = items.syllables.filter(Boolean);
 
+  // 拼一拼 puts a 声母 next to a 韵母, so it needs a syllable that has one.
+  // 课1's syllables are bare 韵母 (e, ē/é) — drillable for tone, but there is
+  // nothing to blend, so they are kept out of the blend pool.
+  const blendPool = syllables.filter(s => s.shengmu);
+
   // Sounds with a confusable set are the only ones worth a 火眼金睛 round.
   const sharpPool = sounds.filter(s => (s.confusable || []).length);
 
-  const wanted = syllables.length
+  const wanted = blendPool.length
     ? ['listenPick', 'blendBuilder', 'toneTrain', 'listenPick', 'blendBuilder',
        'sharpEyes', 'listenPick', 'toneTrain', 'blendBuilder', 'listenPick']
-    : ['listenPick', 'sharpEyes', 'listenPick', 'listenPick', 'sharpEyes',
-       'listenPick', 'listenPick', 'sharpEyes', 'listenPick', 'listenPick'];
+    : syllables.length
+      ? ['listenPick', 'toneTrain', 'sharpEyes', 'listenPick', 'toneTrain',
+         'listenPick', 'sharpEyes', 'listenPick', 'toneTrain', 'listenPick']
+      : ['listenPick', 'sharpEyes', 'listenPick', 'listenPick', 'sharpEyes',
+         'listenPick', 'listenPick', 'sharpEyes', 'listenPick', 'listenPick'];
 
-  let si = 0, yi = 0, pi = 0;
+  let si = 0, yi = 0, pi = 0, bi = 0;
   const schedule = [];
 
   wanted.forEach(type => {
-    if (type === 'blendBuilder' || type === 'toneTrain') {
+    if (type === 'blendBuilder') {
+      if (!blendPool.length) type = 'listenPick';
+      else {
+        schedule.push({ type, item: blendPool[bi++ % blendPool.length] });
+        return;
+      }
+    }
+    if (type === 'toneTrain') {
       if (!syllables.length) type = 'listenPick';
       else {
         schedule.push({ type, item: syllables[yi++ % syllables.length] });

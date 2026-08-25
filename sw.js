@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = '9c42029c5cd1';
+const VERSION = 'f94c58fb3920';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */

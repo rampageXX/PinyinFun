@@ -13,6 +13,9 @@ One child plus a parent dashboard. No accounts, no backend, no build step — op
 A five-minute 任务 each day, mixing the current lesson with spaced-repetition
 review, then 14 lessons to work through and 40 stickers to collect.
 
+Answer 9 of 10 and the lesson is cleared — the next one opens the following
+morning. One lesson a day, in the order her class takes them.
+
 | | |
 |---|---|
 | ![Home](docs/screenshots/home.png) | ![Map](docs/screenshots/map.png) |

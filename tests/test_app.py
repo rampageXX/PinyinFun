@@ -204,27 +204,94 @@ def test_mission_completes_and_records_progress(page):
     assert state["done"] is True
 
 
-def test_mastering_a_lesson_unlocks_the_next_and_awards_a_sticker(page):
-    page.click("#start-screen .btn-primary")
-    # Answer lesson 1's sounds correctly enough times to pass the mastery gate.
-    page.evaluate("""() => {
-        const lesson = getLessonById('lesson-01');
-        lesson.sounds.forEach(id => {
-            for (let i = 0; i < 3; i++) updateStrength(id, true);
+def run_scripted_mission(page, wrong_answers=0):
+    """Drive a mission with a known score, bypassing each game's own UI."""
+    page.evaluate("""(wrong) => {
+        window.__wrongLeft = wrong;
+        ['initListenPick', 'initToneTrain', 'initBlendBuilder', 'initSharpEyes']
+          .forEach(n => {
+            window[n] = function (...a) {
+                const cb = a[a.length - 1];
+                let ok = true;
+                if (window.__wrongLeft > 0) { window.__wrongLeft--; ok = false; }
+                setTimeout(() => cb({ correct: ok, timeMs: 3000 }), 0);
+            };
         });
-        checkProgress();
-        awardStickers();
-    }""")
+        startMission();
+    }""", wrong_answers)
+    for _ in range(300):
+        if page.evaluate(
+            "() => !document.getElementById('result-screen').classList.contains('hidden')"
+        ):
+            return True
+        page.wait_for_timeout(50)
+    return False
+
+
+def test_clearing_run_does_not_open_the_next_lesson_today(page):
+    """Clearing the lesson finishes it — and she still waits until tomorrow."""
+    page.click("#start-screen .btn-primary")
+    assert run_scripted_mission(page, wrong_answers=1)   # 9/10 is enough
+
     after = page.evaluate("""() => ({
+        cleared: getLessonState().clearedOn,
         mastered: getLessonState().masteredLessons,
         current: getLessonState().currentLessonId,
         unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.id),
         stickers: getEarnedStickers(),
     })""")
+    assert "lesson-01" in after["cleared"], "a perfect run should clear the lesson"
     assert "lesson-01" in after["mastered"]
-    assert after["current"] == "lesson-02"
-    assert "lesson-02" in after["unlocked"]
     assert "st-01" in after["stickers"], "finishing a lesson should award its sticker"
+    # The whole point of the pacing: no racing ahead on the same day.
+    assert after["current"] == "lesson-01", "she stays on today's lesson"
+    assert after["unlocked"] == ["lesson-01"], "lesson 2 must not open until tomorrow"
+
+
+def test_nine_out_of_ten_clears_but_eight_does_not(page):
+    """The bar sits at 9/10: one slip is forgiven, two is not."""
+    page.click("#start-screen .btn-primary")
+
+    assert run_scripted_mission(page, wrong_answers=2)   # 8/10
+    after = page.evaluate("""() => ({
+        cleared: getLessonState().clearedOn || {},
+        current: getLessonState().currentLessonId,
+        unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.id),
+    })""")
+    assert after["cleared"] == {}, "8/10 must not clear the lesson"
+    assert after["current"] == "lesson-01"
+    assert after["unlocked"] == ["lesson-01"]
+
+    # Same child, same lesson, one better: that should be enough.
+    assert run_scripted_mission(page, wrong_answers=1)   # 9/10
+    after = page.evaluate("() => getLessonState().clearedOn || {}")
+    assert "lesson-01" in after, "9/10 should clear the lesson"
+
+
+def test_the_next_lesson_opens_the_following_day(page):
+    """Clear today, come back tomorrow, and lesson 2 is waiting."""
+    page.click("#start-screen .btn-primary")
+    assert run_scripted_mission(page, wrong_answers=1)   # 9/10 clears
+
+    # Roll the clearing back one day — the same state as returning tomorrow.
+    page.evaluate("""() => {
+        const st = getLessonState();
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        st.clearedOn['lesson-01'] = toDateString(d);
+        saveLessonState(st);
+    }""")
+    opened = page.evaluate("() => { const n = advanceIfDue(); return n && n.id; }")
+    assert opened == "lesson-02", "yesterday's perfect run should open lesson 2"
+
+    after = page.evaluate("""() => ({
+        current: getLessonState().currentLessonId,
+        unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.id),
+    })""")
+    assert after["current"] == "lesson-02"
+    assert after["unlocked"] == ["lesson-01", "lesson-02"]
+    # One step only — a week away must not skip her past lessons she never did.
+    assert page.evaluate("() => advanceIfDue()") is None
 
 
 # ── audio ────────────────────────────────────────────────────────────

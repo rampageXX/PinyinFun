@@ -50,8 +50,10 @@ function handleStart() {
 function enterApp() {
   document.getElementById('bottom-nav').classList.remove('hidden');
   applyDailyDecay();
+  const opened = advanceIfDue();          // yesterday's perfect run pays off now
   const broke = checkStreakBreak();
   navTo('home-screen');
+  if (opened) showToast('第 ' + opened.order + ' 课开门啦 · ' + opened.title, 3200);
   if (broke.frozen) showToast('昨天没练，用掉了这个月的一次免死金牌 ❄️', 3200);
   else if (broke.broken) showToast('连续天数重新开始，没关系，今天继续 💪', 3200);
 }
@@ -478,7 +480,7 @@ function showResult(result) {
   history[getTodayString()] = { score: result.score, correct: result.correct };
   setLocal('history', history);
 
-  const progress = checkProgress();
+  const progress = checkProgress(result);
   const fresh = awardStickers();
 
   document.getElementById('result-score').textContent = result.score;
@@ -515,14 +517,29 @@ function showResult(result) {
   // Lesson unlocked
   const unlockEl = document.getElementById('result-unlock');
   clearEl(unlockEl);
-  if (progress && progress.unlocked) {
+  if (progress && progress.cleared) {
     unlockEl.classList.remove('hidden');
     const t = document.createElement('div');
     t.style.cssText = 'font-weight:700; margin-bottom:4px;';
-    t.textContent = '第 ' + progress.mastered.order + ' 课学完啦！';
+    t.textContent = '第 ' + progress.cleared.order + ' 课满分通过！⭐';
     const n = document.createElement('div');
     n.style.cssText = 'font-size:0.88rem; color:var(--ink-mid);';
-    n.textContent = '解锁第 ' + progress.unlocked.order + ' 课 · ' + progress.unlocked.title;
+    // Tomorrow, not now — the wait is the point, and saying so turns it into
+    // something to look forward to rather than a door that will not open.
+    n.textContent = progress.next
+      ? '明天见第 ' + progress.next.order + ' 课 · ' + progress.next.title
+      : '十四课全部学完啦！';
+    unlockEl.append(t, n);
+  } else if (progress && !progress.alreadyCleared) {
+    unlockEl.classList.remove('hidden');
+    const t = document.createElement('div');
+    t.style.cssText = 'font-weight:700; margin-bottom:4px;';
+    t.textContent = '再来一次就更棒了 💪';
+    const n = document.createElement('div');
+    n.style.cssText = 'font-size:0.88rem; color:var(--ink-mid);';
+    const need = Math.ceil(result.total * CLEAR_RATIO);
+    n.textContent = '答对 ' + need + ' 题，就能打开第 ' +
+      ((progress.next && progress.next.order) || progress.lesson.order) + ' 课';
     unlockEl.append(t, n);
   } else {
     unlockEl.classList.add('hidden');

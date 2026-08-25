@@ -138,8 +138,11 @@ tests/test_app.py   # Playwright smoke test
 - **Scoring**: 100 base + up to 50 speed bonus (full within 12s) + 25 every 3rd correct in a row.
 - **Daily selection**: seeded by the date string so a reload mid-session resumes the
   same 10 items. 60% current lesson, 40% weakness-weighted review of earlier lessons.
-- **Mastery**: ≥90% of a lesson's sounds attempted ≥2 times AND ≥80% at strength ≥80
-  → lesson mastered, next lesson unlocks, sticker awarded.
+- **Pacing**: a mission at ≥`CLEAR_RATIO` (9/10) *clears* the current lesson and
+  awards its sticker. The next lesson opens **the following day** — one lesson a
+  day is the fastest the app will go, matching the school week. `advanceIfDue()`
+  runs on every app entry and moves exactly one step, so a week away cannot skip
+  her past lessons she never did. Replaying a cleared lesson is always allowed.
 
 ## Audio
 
@@ -231,6 +234,9 @@ guards each one:
 4. **Latin letters need a single-storey `a` and `g`** — see `--font-pinyin`.
 5. **A syllable never precedes either of its parts** (`gen_syllables.py`
    assigns each to the lesson of its last-introduced part).
+6. **A lesson never opens on the day the one before it was cleared.**
+   `isLessonUnlocked()` compares `clearedOn[prev]` against today, so neither
+   the map nor `setCurrentLesson()` can let her race ahead in one sitting.
 
 ## What is left
 

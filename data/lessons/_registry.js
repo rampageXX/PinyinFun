@@ -45,6 +45,7 @@ function getLessonState() {
     currentLessonId: 'lesson-01',
     startedAt: {},
     masteredLessons: [],
+    clearedOn: {},         // { 'lesson-01': '2026-08-25' } — perfect run, that day
     stagesDone: {},        // { 'lesson-01': ['recognise','blend'] }
   };
 }
@@ -61,11 +62,17 @@ function currentLesson() {
 /* A lesson is unlocked when it is the first one, or the previous one is
  * mastered. Lessons are never locked behind a paywall of perfection —
  * mastery is generous (see lib/progress.js) so a child keeps moving. */
+/*
+ * A lesson opens the day after the one before it was cleared. Checking the
+ * date here and not just "is the previous one done" is what stops her tapping
+ * straight on to the next island the moment she scores full marks.
+ */
 function isLessonUnlocked(lesson) {
   if (lesson.order === 1) return true;
-  const state = getLessonState();
   const prev = getLessonByOrder(lesson.order - 1);
-  return !!prev && (state.masteredLessons || []).indexOf(prev.id) !== -1;
+  if (!prev) return false;
+  const on = (getLessonState().clearedOn || {})[prev.id];
+  return !!on && on < getTodayString();
 }
 
 function isLessonMasteredId(lessonId) {

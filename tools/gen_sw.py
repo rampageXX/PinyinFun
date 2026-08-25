@@ -46,13 +46,29 @@ def collect(globs):
     return out
 
 
+# Text files are hashed with their line endings normalised. Git rewrites them
+# to CRLF on checkout under core.autocrlf, so hashing raw bytes would make the
+# version change on a fresh clone and report a perfectly good sw.js as stale.
+TEXT_SUFFIXES = {".html", ".css", ".js", ".json", ".md"}
+
+
+CRLF = bytes((13, 10))
+LF = bytes((10,))
+
+
+def content_for_hash(path):
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        return path.read_bytes().replace(CRLF, LF)
+    return path.read_bytes()
+
+
 def version_of(files):
     """Content hash of the precache list. Also used by verify_data.py to catch
     an sw.js left stale after gen_audio.py added files."""
     h = hashlib.sha256()
     for rel in files:
         h.update(rel.encode("utf-8"))
-        h.update((ROOT / rel).read_bytes())
+        h.update(content_for_hash(ROOT / rel))
     return h.hexdigest()[:12]
 
 

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="拼音岛">
+  <meta name="theme-color" content="#1391AE">
+  <title>拼音岛</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ── 开始 ─────────────────────────────────────────────────────── -->
+  <section id="start-screen" class="screen">
+    <div class="screen-content" style="padding-top:14vh;">
+      <div class="card animate-fade-up" style="text-align:center;">
+
+        <!-- The four-line stave, with the app's name written on it -->
+        <div class="stave stave-4" style="height:132px; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+          <span style="font-family:var(--font-pinyin); font-size:2.9rem; color:var(--ink); transform:translateY(8px);">
+            p<span class="t1">ī</span>n y<span class="t1">ī</span>n
+          </span>
+        </div>
+
+        <h1 style="font-size:2rem; margin-bottom:6px;">拼音岛</h1>
+        <p style="color:var(--ink-light); font-size:0.9rem; margin-bottom:26px;">
+          一课一课，跟着课本学拼音
+        </p>
+
+        <button class="btn btn-primary btn-full" onclick="handleStart()">
+          开始 →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 首页 ─────────────────────────────────────────────────────── -->
+  <section id="home-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <div>
+          <div class="header-title">你好，<span id="home-name">小朋友</span></div>
+          <div class="header-subtitle">今天学一点拼音</div>
+        </div>
+        <div id="home-streak" class="hidden" style="font-size:0.95rem;">🔥 <span id="home-streak-n">0</span></div>
+      </div>
+    </div>
+
+    <div class="screen-content">
+      <div class="card" style="text-align:center;">
+        <div class="section-label">今天的任务</div>
+        <p style="color:var(--ink-light); font-size:0.9rem; margin:14px 0 18px;">
+          每日任务还没做好，先去听一听所有的字母。
+        </p>
+        <button class="btn btn-primary btn-full" onclick="navTo('sounds-screen')">
+          🔊 听一听
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="section-label">课程进度</div>
+        <p style="color:var(--ink-light); font-size:0.88rem; line-height:1.7;">
+          14 课，跟 2024 人教版一年级上册的顺序一样：<br>
+          <strong style="color:var(--ink);">a o e</strong> →
+          <strong style="color:var(--ink);">i u ü</strong> →
+          声母 → 复韵母 → 鼻韵母
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 字母表 ───────────────────────────────────────────────────── -->
+  <section id="sounds-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <div>
+          <div class="header-title">字母表</div>
+          <div class="header-subtitle">点一下就能听到</div>
+        </div>
+        <div id="sounds-count" class="header-subtitle"></div>
+      </div>
+    </div>
+    <div class="screen-content" id="sounds-content"></div>
+  </section>
+
+  <!-- ── 家长 ─────────────────────────────────────────────────────── -->
+  <section id="parent-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <div>
+          <div class="header-title">家长</div>
+          <div class="header-subtitle">进度与设置</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-content">
+      <div class="card">
+        <div class="section-label">音频检查</div>
+        <p style="color:var(--ink-mid); font-size:0.88rem; line-height:1.7; margin-bottom:16px;">
+          所有字母的读音都是提前合成好的。请先听一遍，
+          特别是 <strong>eng</strong> 和 <strong>ong</strong> —— 这两个音没有
+          合适的汉字可以合成，很可能不准。
+        </p>
+        <button class="btn btn-secondary btn-full" onclick="navTo('audio-check-screen')">
+          去检查 →
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="section-label">数据</div>
+        <p style="color:var(--ink-mid); font-size:0.88rem; line-height:1.7; margin-bottom:16px;">
+          所有进度都存在这台设备上，没有账号，也不上传。
+        </p>
+        <button class="btn btn-secondary btn-full" onclick="resetAll()">
+          清空全部进度
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 音频检查 ─────────────────────────────────────────────────── -->
+  <section id="audio-check-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <button class="btn btn-secondary" style="padding:8px 14px; min-height:0; font-size:0.85rem;"
+                onclick="navTo('parent-screen')">← 返回</button>
+        <div class="header-title" style="font-size:1.05rem;">音频检查</div>
+      </div>
+    </div>
+    <div class="screen-content">
+      <p style="color:var(--ink-mid); font-size:0.86rem; line-height:1.7; margin-bottom:18px;">
+        逐个播放，读得对就点 ✓，不对就点 ✗。
+        标记为 ✗ 的会列在最下面，自己录一段
+        存到 <code>audio/overrides/</code> 里就会自动替换。
+      </p>
+      <div id="check-list"></div>
+      <div id="check-summary" class="card hidden" style="margin-top:18px;"></div>
+    </div>
+  </section>
+
+  <!-- ── 底部导航 ─────────────────────────────────────────────────── -->
+  <nav id="bottom-nav" class="hidden">
+    <button class="nav-btn active" data-screen="home-screen" onclick="navTo('home-screen', this)">
+      <span class="nav-icon">🏠</span><span class="nav-label">首页</span>
+    </button>
+    <button class="nav-btn" data-screen="sounds-screen" onclick="navTo('sounds-screen', this)">
+      <span class="nav-icon">🔤</span><span class="nav-label">字母表</span>
+    </button>
+    <button class="nav-btn" data-screen="parent-screen" onclick="navTo('parent-screen', this)">
+      <span class="nav-icon">👨‍👩‍👧</span><span class="nav-label">家长</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- ── Scripts, in dependency order ─────────────────────────────── -->
+  <script src="lib/storage.js"></script>
+  <script src="lib/ruby.js"></script>
+  <script src="lib/audio.js"></script>
+  <script src="data/sounds.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+/* ═══════════════════════════════════════════════════════════════════
+   拼音岛 — design system
+
+   The signature element is 四线三格: the four-line, three-space stave
+   every Chinese first-grader writes pinyin in. Letters sit on it the way
+   notes sit on a musical staff, with ascenders (b d f h k l t) reaching
+   into the top space and descenders (g j p q y) dropping into the bottom.
+   It is the single most recognisable artifact of learning pinyin, so it
+   carries the visual identity rather than generic island decoration.
+
+   Colour is meaning, not decoration. The four tone colours appear ONLY on
+   tone marks and tone-bearing syllables — if a child sees amber, it is a
+   second tone, every time. Everything else stays paper, ink and sea.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Chrome — an exercise book: cream paper, printed rule, pencil ink */
+  --paper:       #FFFCF4;
+  --paper-warm:  #FFF4DE;
+  --paper-edge:  #EFE4CC;
+  --stave:       #F2A28C;   /* the red-orange rule printed in Chinese 练习本 */
+  --stave-soft:  #FAD9CE;
+  --ink:         #2B2B33;
+  --ink-mid:     #5C5F6B;
+  --ink-light:   #949AA6;
+
+  /* Brand — one colour for navigation and chrome, so tone colours stay loud */
+  --sea:         #1391AE;
+  --sea-deep:    #0B6C83;
+  --sea-pale:    #DFF3F8;
+  --sun:         #FFC53D;
+
+  /* Tone colours — reserved. Never use these for anything but tones. */
+  --tone1:       #E0483C;   /* ˉ 高平 */
+  --tone2:       #F0912E;   /* ˊ 上扬 */
+  --tone3:       #2FA05C;   /* ˇ 先降后升 */
+  --tone4:       #3B72D9;   /* ˋ 下降 */
+  --tone0:       #9AA1AC;   /* 轻声 */
+
+  /* Feedback — deliberately not red for wrong. A 7-year-old gets a gentle
+     grey shake and the right answer, not an alarm. */
+  --yes:         #1E9E52;
+  --yes-fill:    #DDF5E5;
+  --no-fill:     #ECEDF0;
+
+  --radius:      20px;
+  --radius-lg:   28px;
+  --tap:         64px;      /* minimum touch target */
+
+  --shadow-sm:   0 2px 0 var(--paper-edge);
+  --shadow-md:   0 4px 0 var(--paper-edge), 0 6px 16px rgba(43,43,51,0.08);
+  --shadow-lift: 0 6px 0 var(--paper-edge), 0 12px 28px rgba(43,43,51,0.14);
+
+  /* Latin letters MUST come from a face with a single-storey 'a' and 'g'.
+     Chinese textbooks print ɑ and ɡ that way, and a double-storey 'a' is a
+     genuine source of confusion for a beginner. Century Gothic ships on
+     Windows, Futura on iPad and macOS — between them the target devices
+     are covered. */
+  --font-pinyin: "Century Gothic", "URW Gothic", Futura, "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-han:    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Heiti SC", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-han);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  /* faint ruled-paper texture, the way an exercise book looks edge-on */
+  background-image: repeating-linear-gradient(
+    to bottom, transparent 0 47px, rgba(242,162,140,0.07) 47px 48px);
+}
+
+/* ── Screens ──────────────────────────────────────────────────────── */
+
+.screen { display: block; min-height: 100dvh; padding-bottom: 96px; }
+.screen.hidden { display: none; }
+
+.screen-content {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 20px 18px 32px;
+}
+
+.screen-header {
+  background: var(--sea);
+  color: white;
+  padding: calc(14px + env(safe-area-inset-top)) 18px 18px;
+  border-bottom: 3px solid var(--sea-deep);
+}
+.screen-header-inner {
+  max-width: 560px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.header-title    { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.02em; }
+.header-subtitle { font-size: 0.8rem; opacity: 0.85; margin-top: 2px; }
+
+/* ── 四线三格 — the signature ─────────────────────────────────────────
+   Four lines, three spaces. The middle space is where every letter's body
+   sits; the second line down is the baseline. Rendered as a background so
+   any element can become a stave.                                     */
+
+.stave {
+  position: relative;
+  background-image:
+    linear-gradient(var(--stave) 0 0),
+    linear-gradient(var(--stave) 0 0),
+    linear-gradient(var(--stave) 0 0),
+    linear-gradient(var(--stave) 0 0);
+  background-repeat: no-repeat;
+  background-size: 100% 2px, 100% 2px, 100% 2px, 100% 2px;
+  background-position: 0 0, 0 33.333%, 0 66.666%, 0 calc(100% - 2px);
+}
+/* The middle rules are the working lines: draw them solid, the outer two
+   lighter, matching how the books are actually printed. */
+.stave-4 {
+  background-image:
+    linear-gradient(var(--stave-soft) 0 0),
+    linear-gradient(var(--stave) 0 0),
+    linear-gradient(var(--stave) 0 0),
+    linear-gradient(var(--stave-soft) 0 0);
+}
+
+/* ── Sound card — a letter standing on its stave ──────────────────── */
+
+.sound-card {
+  background: var(--paper);
+  border: 3px solid var(--paper-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 14px 12px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  min-height: var(--tap);
+  user-select: none;
+}
+.sound-card:active { transform: translateY(3px); box-shadow: var(--shadow-sm); }
+.sound-card:focus-visible { outline: 3px solid var(--sea); outline-offset: 3px; }
+
+/* The letter sits in a three-space stave, vertically centred on the
+   middle space so ascenders and descenders land in the right rows. */
+.sound-stave {
+  height: 84px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+.sound-letter {
+  font-family: var(--font-pinyin);
+  font-size: 3.1rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  /* nudge onto the baseline: the stave's third rule */
+  transform: translateY(6px);
+}
+.sound-pic   { font-size: 1.5rem; line-height: 1; }
+.sound-label { font-size: 0.72rem; color: var(--ink-light); margin-top: 4px; }
+
+.sounds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 12px;
+}
+
+/* ── Tone colours ─────────────────────────────────────────────────── */
+
+.t1 { color: var(--tone1); }
+.t2 { color: var(--tone2); }
+.t3 { color: var(--tone3); }
+.t4 { color: var(--tone4); }
+.t0 { color: var(--tone0); }
+
+.tone-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 26px; border-radius: 8px;
+  font-size: 0.78rem; font-weight: 700; font-family: var(--font-pinyin);
+  color: white;
+}
+.tone-chip.t1 { background: var(--tone1); }
+.tone-chip.t2 { background: var(--tone2); }
+.tone-chip.t3 { background: var(--tone3); }
+.tone-chip.t4 { background: var(--tone4); }
+
+/* ── Ruby: pinyin printed above 汉字, the way the textbook does ────── */
+
+ruby { ruby-position: over; -webkit-ruby-position: before; }
+rt {
+  font-family: var(--font-pinyin);
+  font-size: 0.46em;
+  color: var(--ink-light);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+.ruby-line { font-family: var(--font-han); line-height: 2.1; }
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+
+.btn {
+  font-family: var(--font-han);
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px 24px;
+  min-height: var(--tap);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn:active { transform: translateY(3px); }
+.btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+.btn-primary {
+  background: var(--sun);
+  color: var(--ink);
+  box-shadow: 0 5px 0 #D9A21E;
+}
+.btn-primary:active { box-shadow: 0 2px 0 #D9A21E; }
+
+.btn-secondary {
+  background: var(--paper);
+  color: var(--sea-deep);
+  border: 3px solid var(--sea-pale);
+  box-shadow: var(--shadow-sm);
+}
+.btn-full { width: 100%; }
+
+/* ── Speaker button — the most-tapped control in the app ──────────── */
+
+.speaker {
+  width: 108px; height: 108px; border-radius: 50%;
+  border: none; background: var(--sea); color: white;
+  font-size: 2.6rem; cursor: pointer;
+  box-shadow: 0 6px 0 var(--sea-deep);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.speaker:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--sea-deep); }
+.speaker.playing { animation: pulse 0.6s ease; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  40%      { transform: scale(1.08); }
+}
+
+/* ── Feedback states ──────────────────────────────────────────────── */
+
+.is-correct { background: var(--yes-fill) !important; border-color: var(--yes) !important; }
+.is-wrong   { background: var(--no-fill)  !important; animation: shake 0.4s ease; }
+
+@keyframes shake {
+  0%, 100%      { transform: translateX(0); }
+  20%, 60%      { transform: translateX(-7px); }
+  40%, 80%      { transform: translateX(7px); }
+}
+
+.animate-pop { animation: pop 0.34s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes pop { from { transform: scale(0.82); } to { transform: scale(1); } }
+
+.animate-fade-up { animation: fadeUp 0.34s ease both; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Cards and sections ───────────────────────────────────────────── */
+
+.card {
+  background: var(--paper);
+  border: 3px solid var(--paper-edge);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.section-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+/* ── Bottom navigation ────────────────────────────────────────────── */
+
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex;
+  background: var(--paper);
+  border-top: 3px solid var(--paper-edge);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+}
+#bottom-nav.hidden { display: none; }
+
+.nav-btn {
+  flex: 1; border: none; background: none; cursor: pointer;
+  padding: 10px 4px 8px;
+  min-height: var(--tap);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--ink-light);
+  font-family: var(--font-han);
+}
+.nav-btn.active { color: var(--sea); }
+.nav-icon  { font-size: 1.4rem; line-height: 1; }
+.nav-label { font-size: 0.68rem; font-weight: 700; }
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed; left: 50%; bottom: 112px;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--ink); color: white;
+  padding: 12px 20px; border-radius: 999px;
+  font-size: 0.88rem; font-weight: 600;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+  z-index: 100; max-width: 88vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Audio check screen ───────────────────────────────────────────── */
+
+.check-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border: 2px solid var(--paper-edge);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  background: var(--paper);
+}
+.check-row.flagged { border-color: var(--stave); background: #FFF6F2; }
+.check-letter {
+  font-family: var(--font-pinyin); font-size: 1.6rem;
+  min-width: 62px; text-align: center;
+}
+.check-meta { flex: 1; font-size: 0.76rem; color: var(--ink-light); line-height: 1.4; }
+.check-play {
+  width: 46px; height: 46px; border-radius: 50%; border: none;
+  background: var(--sea-pale); color: var(--sea-deep);
+  font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+}
+.check-mark {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 2px solid var(--paper-edge); background: var(--paper);
+  font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+}
+.check-mark.ok  { background: var(--yes-fill); border-color: var(--yes); }
+.check-mark.bad { background: #FFE8E2; border-color: var(--stave); }
+
+.hidden { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

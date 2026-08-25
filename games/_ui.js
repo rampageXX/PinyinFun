@@ -83,10 +83,12 @@ function flashResult(opts) {
 
   if (isCorrect) {
     picked.classList.add('is-correct', 'animate-pop');
+    sfxCorrect();
     setTimeout(onDone, 700);
     return;
   }
 
+  sfxWrong();
   if (picked) picked.classList.add('is-wrong');
   if (correctEl) correctEl.classList.add('is-correct');
   if (replaySrc) setTimeout(() => playAudio(replaySrc), 400);

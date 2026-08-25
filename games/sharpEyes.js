@@ -102,6 +102,7 @@ function initSharpEyes(sound, pool, onComplete) {
       found++;
       btn.classList.add('is-correct', 'animate-pop');
       foundLabel.textContent = `找到 ${found} / ${targetCount}`;
+      sfxTap();
       playAudio(sound.audio);
       if (found === targetCount) finish();
     } else {

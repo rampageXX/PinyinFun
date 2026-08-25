@@ -148,6 +148,7 @@ function initBlendBuilder(syllable, pool, onComplete) {
     slot.textContent = text;
     slot.classList.add('animate-pop');
     setTimeout(() => slot.classList.remove('animate-pop'), 340);
+    sfxTap();
     playAudio(partAudio(role, text, syllable));
 
     if (parts.every(p => chosen[p.role])) setTimeout(check, 420);
@@ -159,6 +160,7 @@ function initBlendBuilder(syllable, pool, onComplete) {
     const isCorrect = built === parts.map(p => p.text).join('');
 
     if (!isCorrect) {
+      sfxWrong();
       slotRow.classList.add('is-wrong');
       setTimeout(() => slotRow.classList.remove('is-wrong'), 450);
       answered = true;
@@ -182,6 +184,7 @@ function initBlendBuilder(syllable, pool, onComplete) {
     clearTimeout(nudgeTimer);
     lockOptions(rowsWrap);
 
+    sfxCorrect();
     result.textContent = target.pinyin;
     result.classList.add('animate-pop', toneClass(target.pinyin));
     result.style.borderStyle = 'solid';

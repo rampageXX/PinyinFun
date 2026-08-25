@@ -509,7 +509,7 @@ function showResult(result) {
     name.textContent = '新贴纸 · ' + s.name;
     el.append(emoji, name);
     stickerWrap.appendChild(el);
-    setTimeout(() => el.classList.add('animate-pop'), 220 * (i + 1));
+    setTimeout(() => { el.classList.add('animate-pop'); sfxUnlock(); }, 220 * (i + 1));
   });
 
   // Lesson unlocked
@@ -636,6 +636,12 @@ function renderParent() {
     '这两个音没有合适的汉字可以合成，很可能不准。',
     '去检查 →', () => navTo('audio-check-screen')));
 
+  root.appendChild(toggleCard(
+    '提示音',
+    '答对答错的小提示音。字母的读音不受影响，只关掉提示音。',
+    getLocal('sfx') !== false,
+    on => { setSfxEnabled(on); if (on) sfxCorrect(); }));
+
   root.appendChild(actionCard(
     '数据',
     '所有进度都存在这台设备上，没有账号，也不上传。',
@@ -659,6 +665,29 @@ function statCard(rows) {
     card.appendChild(row);
   });
   card.lastChild.style.borderBottom = 'none';
+  return card;
+}
+
+function toggleCard(title, body, initial, onChange) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.textContent = title;
+
+  const p = document.createElement('p');
+  p.style.cssText = 'color:var(--ink-mid); font-size:0.88rem; line-height:1.7; margin-bottom:16px;';
+  p.textContent = body;
+
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary btn-full';
+  let on = initial;
+  const paint = () => { btn.textContent = on ? '🔔 开着' : '🔕 关着'; };
+  paint();
+  btn.addEventListener('click', () => { on = !on; paint(); onChange(on); });
+
+  card.append(label, p, btn);
   return card;
 }
 
@@ -802,6 +831,7 @@ function showToast(msg, duration = 2200) {
 
 document.addEventListener('DOMContentLoaded', () => {
   probeOverrides(SOUNDS);
+  initSfx();
   document.addEventListener('pointerdown', unlockAudio, { once: true });
 
   if (getLocal('started')) enterApp();

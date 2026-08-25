@@ -7,6 +7,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="拼音岛">
   <meta name="theme-color" content="#1391AE">
+  <!-- The child launches this from the iPad home screen, so it needs a real
+       icon rather than a screenshot. tools/gen_icon.py draws it. -->
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <title>拼音岛</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -203,6 +207,7 @@
   <script src="lib/storage.js"></script>
   <script src="lib/ruby.js"></script>
   <script src="lib/audio.js"></script>
+  <script src="lib/sfx.js"></script>
   <script src="data/sounds.js"></script>
   <script src="data/syllables.js"></script>
   <script src="data/stickers.js"></script>

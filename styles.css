@@ -157,8 +157,10 @@ body {
   line-height: 1;
   color: var(--ink);
   letter-spacing: 0.01em;
-  /* nudge onto the baseline: the stave's third rule */
-  transform: translateY(6px);
+  /* Centring the em box in a stave whose height is ~1.7x the font size puts
+     the baseline on the third rule on its own, which is where a letter body
+     belongs. Ascenders then reach the top space and descenders drop into the
+     bottom one, exactly as the textbook prints them. */
 }
 .sound-pic   { font-size: 1.5rem; line-height: 1; }
 .sound-label { font-size: 0.72rem; color: var(--ink-light); margin-top: 4px; }
@@ -281,12 +283,14 @@ rt {
   margin-bottom: 16px;
 }
 
+/* No text-transform here. Section labels often contain pinyin, and pinyin is
+   taught and printed in lowercase — uppercasing "j q x" into "J Q X" would
+   show the child letterforms she is not learning. */
 .section-label {
   font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   color: var(--ink-light);
-  text-transform: uppercase;
   margin-bottom: 10px;
 }
 

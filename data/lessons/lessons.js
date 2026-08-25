@@ -173,8 +173,8 @@ registerLesson({
   chant: {
     title: '《小 ü 脱帽》',
     lines: [
-      { hanzi: '小ü有礼貌', pinyin: 'xiǎo ü yǒu lǐ mào', audio: 'audio/chant/l06-1.mp3' },
-      { hanzi: '见了j q x', pinyin: 'jiàn le j q x', audio: 'audio/chant/l06-2.mp3' },
+      { hanzi: '小ü有礼貌', pinyin: 'xiǎo yǒu lǐ mào', audio: 'audio/chant/l06-1.mp3' },
+      { hanzi: '见了j q x', pinyin: 'jiàn le', audio: 'audio/chant/l06-2.mp3' },
       { hanzi: '摘下帽子', pinyin: 'zhāi xià mào zi', audio: 'audio/chant/l06-3.mp3' },
       { hanzi: '敬个礼', pinyin: 'jìng ge lǐ', audio: 'audio/chant/l06-4.mp3' },
     ],
@@ -277,9 +277,9 @@ registerLesson({
   chant: {
     title: '《标调歌》',
     lines: [
-      { hanzi: '有a不放过', pinyin: 'yǒu a bú fàng guò', audio: 'audio/chant/l10-1.mp3' },
-      { hanzi: '没a找o e', pinyin: 'méi a zhǎo o e', audio: 'audio/chant/l10-2.mp3' },
-      { hanzi: 'i u并列标在后', pinyin: 'i u bìng liè biāo zài hòu', audio: 'audio/chant/l10-3.mp3' },
+      { hanzi: '有a不放过', pinyin: 'yǒu bú fàng guò', audio: 'audio/chant/l10-1.mp3' },
+      { hanzi: '没a找o e', pinyin: 'méi zhǎo', audio: 'audio/chant/l10-2.mp3' },
+      { hanzi: 'i u并列标在后', pinyin: 'bìng liè biāo zài hòu', audio: 'audio/chant/l10-3.mp3' },
     ],
   },
   sticker: 'st-10',

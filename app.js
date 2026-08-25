@@ -1,19 +1,28 @@
 /*
  * app.js — screen navigation and rendering.
- * Screen machinery follows Bonjourly's pattern: every screen is a section
- * in index.html, toggled with .hidden. No router, no framework.
+ * Screen machinery follows Bonjourly's pattern: every screen is a section in
+ * index.html, toggled with .hidden. No router, no framework.
  */
 
 let currentScreen = 'start-screen';
+let viewingLessonId = null;      // which lesson the detail screen is showing
 
 /* ── Navigation ───────────────────────────────────────────────────── */
+
+const RENDERERS = {
+  'home-screen':        renderHome,
+  'map-screen':         renderMap,
+  'lesson-screen':      renderLesson,
+  'sticker-screen':     renderStickers,
+  'parent-screen':      renderParent,
+  'audio-check-screen': renderAudioCheck,
+};
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   const el = document.getElementById(id);
   if (!el) return;
   el.classList.remove('hidden');
-  el.scrollTop = 0;
   window.scrollTo(0, 0);
   currentScreen = id;
 }
@@ -21,12 +30,8 @@ function showScreen(id) {
 function navTo(screenId, btn) {
   stopAudio();
   showScreen(screenId);
+  if (RENDERERS[screenId]) RENDERERS[screenId]();
 
-  if (screenId === 'sounds-screen')       renderSounds();
-  if (screenId === 'audio-check-screen')  renderAudioCheck();
-
-  // Keep the nav highlight in sync even when navigation came from a card
-  // rather than from the nav bar itself.
   const target = btn || document.querySelector(`.nav-btn[data-screen="${screenId}"]`);
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   if (target) target.classList.add('active');
@@ -35,84 +40,124 @@ function navTo(screenId, btn) {
 /* ── Start ────────────────────────────────────────────────────────── */
 
 function handleStart() {
-  // The first tap is the only chance to unlock audio on iOS.
-  unlockAudio();
+  unlockAudio();                       // the only reliable moment on iOS
+  const name = document.getElementById('name-input').value.trim();
+  if (name) setLocal('name', name);
   setLocal('started', true);
   enterApp();
 }
 
 function enterApp() {
   document.getElementById('bottom-nav').classList.remove('hidden');
-  renderHome();
+  applyDailyDecay();
+  const broke = checkStreakBreak();
   navTo('home-screen');
+  if (broke.frozen) showToast('昨天没练，用掉了这个月的一次免死金牌 ❄️', 3200);
+  else if (broke.broken) showToast('连续天数重新开始，没关系，今天继续 💪', 3200);
 }
+
+/* ── 首页 ─────────────────────────────────────────────────────────── */
 
 function renderHome() {
-  const name = getLocal('name');
-  if (name) document.getElementById('home-name').textContent = name;
+  const lesson = currentLesson();
+  const streak = getStreak();
+
+  document.getElementById('home-name').textContent = getLocal('name') || '小朋友';
+  document.getElementById('home-date').textContent = formatDate(getTodayString());
+  document.getElementById('home-streak-n').textContent = streak.current;
+  document.getElementById('home-points').textContent = getPoints();
+  document.getElementById('home-lesson-title').textContent = lesson.title;
+  document.getElementById('home-lesson-sub').textContent =
+    '第 ' + lesson.order + ' 课 · ' + lesson.subtitle;
+
+  const done = missionDoneToday();
+  document.getElementById('home-done-msg').classList.toggle('hidden', !done);
+  document.getElementById('home-play-btn').textContent = done ? '↻ 再练一次' : '▶ 开始，5 分钟';
+
+  const grid = document.getElementById('home-lesson-sounds');
+  clearEl(grid);
+  lessonSounds(lesson).forEach(s => grid.appendChild(buildSoundCard(s, true)));
+
+  renderWeek();
 }
 
-/* ── 字母表 — every sound, grouped the way the textbook groups them ── */
+/* Seven days, most recent last. A filled dot is a day she practised. */
+function renderWeek() {
+  const wrap = document.getElementById('home-week');
+  clearEl(wrap);
 
-const SOUND_GROUPS = [
-  { key: 'dan',     title: '单韵母',       sub: '6 个',  filter: s => s.sub === 'dan' },
-  { key: 'shengmu', title: '声母',         sub: '23 个', filter: s => s.type === 'shengmu' },
-  { key: 'fu',      title: '复韵母',       sub: '9 个',  filter: s => s.sub === 'fu' },
-  { key: 'qian',    title: '前鼻韵母',     sub: '5 个',  filter: s => s.sub === 'qian' },
-  { key: 'hou',     title: '后鼻韵母',     sub: '4 个',  filter: s => s.sub === 'hou' },
-  { key: 'zhengti', title: '整体认读音节', sub: '16 个 · 不能拼读，直接读出',
-    filter: s => s.type === 'zhengti' },
-];
+  const history = getLocal('history') || {};
+  const names = ['日', '一', '二', '三', '四', '五', '六'];
 
-function renderSounds() {
-  const root = document.getElementById('sounds-content');
-  clearEl(root);
-  document.getElementById('sounds-count').textContent = SOUNDS.length + ' 个';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = toDateString(d);
+    const played = !!history[key];
 
-  SOUND_GROUPS.forEach(group => {
-    const items = SOUNDS.filter(group.filter);
-    if (!items.length) return;
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1; text-align:center;';
+
+    const dot = document.createElement('div');
+    dot.style.cssText =
+      `width:34px; height:34px; margin:0 auto 5px; border-radius:50%;
+       display:flex; align-items:center; justify-content:center; font-size:0.9rem;
+       background:${played ? 'var(--sun)' : 'var(--paper-warm)'};
+       border:2px solid ${played ? '#D9A21E' : 'var(--paper-edge)'};`;
+    dot.textContent = played ? '★' : '';
 
     const label = document.createElement('div');
-    label.className = 'section-label';
-    label.style.marginTop = '22px';
-    label.textContent = `${group.title} · ${group.sub}`;
-    root.appendChild(label);
+    label.style.cssText = 'font-size:0.68rem; color:var(--ink-light);';
+    label.textContent = names[d.getDay()];
 
-    const grid = document.createElement('div');
-    grid.className = 'sounds-grid';
-    items.forEach(s => grid.appendChild(buildSoundCard(s)));
-    root.appendChild(grid);
-  });
-
-  preloadSrcs(SOUNDS.map(s => s.audio));
+    col.append(dot, label);
+    wrap.appendChild(col);
+  }
 }
 
-function buildSoundCard(sound) {
+/* ── Sound card, shared by 首页 / 课程 ─────────────────────────────── */
+
+function buildSoundCard(sound, compact) {
   const card = document.createElement('button');
   card.className = 'sound-card';
-  card.setAttribute('aria-label', `播放 ${sound.text}`);
+  card.setAttribute('aria-label', '播放 ' + sound.text);
 
   const stave = document.createElement('div');
   stave.className = 'sound-stave stave stave-4';
+  if (compact) stave.style.height = '62px';
 
   const letter = document.createElement('span');
   letter.className = 'sound-letter';
+  if (compact) letter.style.fontSize = '2.3rem';
   letter.textContent = sound.text;
   stave.appendChild(letter);
-
-  const pic = document.createElement('div');
-  pic.className = 'sound-pic';
-  pic.textContent = sound.pic || '';
-
   card.appendChild(stave);
-  card.appendChild(pic);
 
-  if (sound.mnemonic) {
-    const hint = document.createElement('div');
-    hint.className = 'sound-label';
-    hint.textContent = sound.mnemonic;
-    card.appendChild(hint);
+  if (!compact) {
+    const pic = document.createElement('div');
+    pic.className = 'sound-pic';
+    pic.textContent = sound.pic || '';
+    card.appendChild(pic);
+
+    if (sound.mnemonic) {
+      const hint = document.createElement('div');
+      hint.className = 'sound-label';
+      hint.textContent = sound.mnemonic;
+      card.appendChild(hint);
+    }
+  }
+
+  // A thin strength bar turns the card into its own progress indicator.
+  const strength = getStrength(sound.id);
+  if (strength !== null) {
+    const bar = document.createElement('div');
+    bar.style.cssText =
+      'height:4px; border-radius:999px; background:var(--paper-edge); margin-top:6px; overflow:hidden;';
+    const fill = document.createElement('div');
+    fill.style.cssText =
+      `height:100%; width:${strength}%; border-radius:999px; background:${strengthLabel(strength).color};`;
+    bar.appendChild(fill);
+    card.appendChild(bar);
   }
 
   card.addEventListener('click', () => {
@@ -120,23 +165,535 @@ function buildSoundCard(sound) {
     setTimeout(() => card.classList.remove('animate-pop'), 340);
     playAudio(sound.audio);
   });
+  return card;
+}
 
+/* ── 拼音王国 ─────────────────────────────────────────────────────── */
+
+function renderMap() {
+  const root = document.getElementById('map-content');
+  clearEl(root);
+
+  const state = getLessonState();
+  const mastered = state.masteredLessons || [];
+  document.getElementById('map-done').textContent = mastered.length;
+
+  let unit = null;
+  LESSONS.forEach(lesson => {
+    if (lesson.unit !== unit) {
+      unit = lesson.unit;
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.style.marginTop = '20px';
+      label.textContent = '第' + ['', '一', '二', '三', '四'][unit] + '单元';
+      root.appendChild(label);
+    }
+    root.appendChild(buildIslandRow(lesson, mastered, state));
+  });
+}
+
+function buildIslandRow(lesson, mastered, state) {
+  const isDone    = mastered.indexOf(lesson.id) !== -1;
+  const isCurrent = state.currentLessonId === lesson.id;
+  const unlocked  = isLessonUnlocked(lesson);
+
+  const row = document.createElement('button');
+  row.className = 'card';
+  row.style.cssText =
+    `display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+     margin-bottom:10px; padding:14px 16px; cursor:${unlocked ? 'pointer' : 'default'};
+     opacity:${unlocked ? 1 : 0.5}; border-color:${isCurrent ? 'var(--sea)' : 'var(--paper-edge)'};`;
+
+  const icon = document.createElement('div');
+  icon.style.cssText = 'font-size:2rem; width:48px; text-align:center;';
+  icon.textContent = unlocked ? lesson.island : '🔒';
+
+  const mid = document.createElement('div');
+  mid.style.flex = '1';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-family:var(--font-pinyin); font-size:1.35rem; font-weight:600;';
+  title.textContent = lesson.title;
+
+  const sub = document.createElement('div');
+  sub.style.cssText = 'font-size:0.78rem; color:var(--ink-light); margin-top:2px;';
+  sub.textContent = '第 ' + lesson.order + ' 课 · ' + lesson.subtitle;
+
+  mid.append(title, sub);
+
+  if (unlocked) {
+    const pct = lessonProgressPct(lesson);
+    const bar = document.createElement('div');
+    bar.style.cssText =
+      'height:6px; border-radius:999px; background:var(--paper-edge); margin-top:8px; overflow:hidden;';
+    const fill = document.createElement('div');
+    fill.style.cssText =
+      `height:100%; width:${pct}%; border-radius:999px; background:var(--sea);`;
+    bar.appendChild(fill);
+    mid.appendChild(bar);
+  }
+
+  const badge = document.createElement('div');
+  badge.style.cssText = 'font-size:1.3rem; width:32px; text-align:center;';
+  badge.textContent = isDone ? '✓' : (isCurrent ? '◉' : '');
+  badge.style.color = isDone ? 'var(--yes)' : 'var(--sea)';
+
+  row.append(icon, mid, badge);
+  if (unlocked) {
+    row.addEventListener('click', () => openLesson(lesson.id));
+  } else {
+    row.addEventListener('click', () => showToast('先学完前面那一课 🔒'));
+  }
+  return row;
+}
+
+/* ── 一课的详情 ───────────────────────────────────────────────────── */
+
+function openLesson(lessonId) {
+  viewingLessonId = lessonId;
+  navTo('lesson-screen');
+}
+
+function renderLesson() {
+  const lesson = getLessonById(viewingLessonId) || currentLesson();
+  viewingLessonId = lesson.id;
+
+  document.getElementById('lesson-header-title').textContent =
+    '第 ' + lesson.order + ' 课 · ' + lesson.title;
+
+  const root = document.getElementById('lesson-content');
+  clearEl(root);
+
+  // Intro
+  const intro = document.createElement('div');
+  intro.className = 'card';
+  intro.style.cssText = 'font-size:0.92rem; line-height:1.8; color:var(--ink-mid);';
+  intro.textContent = lesson.intro;
+  root.appendChild(intro);
+
+  // ① 认一认
+  root.appendChild(sectionLabel('① 认一认'));
+  const grid = document.createElement('div');
+  grid.className = 'sounds-grid';
+  lessonSounds(lesson).forEach(s => grid.appendChild(buildSoundCard(s)));
+  root.appendChild(grid);
+
+  // ② the rule this lesson turns on
+  if (lesson.rule) root.appendChild(buildRuleCard(lesson.rule));
+
+  // ③ 词语
+  if (lesson.words && lesson.words.length) {
+    root.appendChild(sectionLabel('② 读一读'));
+    const words = document.createElement('div');
+    words.className = 'card';
+    words.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; justify-content:center;';
+    lesson.words.forEach(w => words.appendChild(buildWordChip(w)));
+    root.appendChild(words);
+  }
+
+  // ④ 儿歌
+  if (lesson.chant) {
+    root.appendChild(sectionLabel('③ 唱一唱'));
+    root.appendChild(buildChantCard(lesson.chant));
+  }
+
+  // Practise
+  const play = document.createElement('button');
+  play.className = 'btn btn-primary btn-full';
+  play.style.marginTop = '20px';
+  play.textContent = '▶ 练一练';
+  play.addEventListener('click', () => {
+    setCurrentLesson(lesson.id);
+    startMission();
+  });
+  root.appendChild(play);
+
+  preloadSrcs(lessonSounds(lesson).map(s => s.audio));
+}
+
+function sectionLabel(text) {
+  const el = document.createElement('div');
+  el.className = 'section-label';
+  el.style.marginTop = '22px';
+  el.textContent = text;
+  return el;
+}
+
+function buildRuleCard(rule) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.cssText =
+    'background:var(--sea-pale); border-color:var(--sea); margin-top:22px;';
+
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.style.color = 'var(--sea-deep)';
+  label.textContent = '记住这个规则 · ' + rule.title;
+
+  const text = document.createElement('div');
+  text.style.cssText = 'font-size:1.02rem; line-height:1.8; font-weight:600; color:var(--ink);';
+  text.textContent = rule.text;
+
+  card.append(label, text);
+
+  // 四声 shown as the four tone colours on one letter.
+  if (rule.tones) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:10px; justify-content:center; margin-top:14px;';
+    rule.tones.forEach((t, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'sound-letter t' + (i + 1);
+      chip.style.cssText = 'font-size:2.2rem; transform:none;';
+      chip.textContent = t;
+      row.appendChild(chip);
+    });
+    card.appendChild(row);
+  }
+
+  // A worked blend: b + ā = bā, tappable to hear it.
+  if (rule.demo) {
+    const row = document.createElement('button');
+    row.style.cssText =
+      'display:flex; align-items:center; justify-content:center; gap:8px; margin-top:14px;' +
+      'width:100%; border:none; background:none; cursor:pointer;' +
+      'font-family:var(--font-pinyin); font-size:1.9rem; color:var(--ink);';
+
+    rule.demo.parts.forEach((p, i) => {
+      if (i) row.appendChild(sep('—'));
+      const el = document.createElement('span');
+      el.textContent = p;
+      row.appendChild(el);
+    });
+    row.appendChild(sep('='));
+
+    const res = document.createElement('span');
+    res.className = toneClass(rule.demo.result);
+    res.style.fontWeight = '700';
+    res.textContent = rule.demo.result;
+    row.appendChild(res);
+
+    if (rule.demo.hanzi) {
+      const han = document.createElement('span');
+      han.style.cssText = 'font-family:var(--font-han); font-size:1.5rem; margin-left:6px;';
+      han.textContent = rule.demo.hanzi;
+      row.appendChild(han);
+    }
+
+    row.addEventListener('click', () => {
+      const srcs = rule.demo.parts
+        .map(p => { const s = getSoundByText(stripTone(p)); return s && s.audio; })
+        .filter(Boolean);
+      playSequence(srcs);
+    });
+    card.appendChild(row);
+
+    if (rule.demo.note) {
+      const note = document.createElement('div');
+      note.style.cssText = 'text-align:center; font-size:0.78rem; color:var(--ink-light); margin-top:6px;';
+      note.textContent = rule.demo.note;
+      card.appendChild(note);
+    }
+  }
+
+  return card;
+}
+
+function sep(text) {
+  const el = document.createElement('span');
+  el.style.color = 'var(--ink-light)';
+  el.textContent = text;
+  return el;
+}
+
+function buildWordChip(word) {
+  const chip = document.createElement('button');
+  chip.style.cssText =
+    'border:2px solid var(--paper-edge); border-radius:16px; background:var(--paper);' +
+    'padding:10px 14px; cursor:pointer; text-align:center; min-width:96px;' +
+    'font-size:1.2rem;';
+
+  const pic = document.createElement('div');
+  pic.style.fontSize = '1.6rem';
+  pic.textContent = word.pic || '';
+
+  chip.appendChild(pic);
+  chip.appendChild(rubyEl(word.hanzi, word.pinyin));
+  chip.addEventListener('click', () => playAudio(word.audio));
+  return chip;
+}
+
+function buildChantCard(chant) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:700; margin-bottom:12px; text-align:center;';
+  title.textContent = chant.title;
+  card.appendChild(title);
+
+  chant.lines.forEach(line => {
+    const row = document.createElement('button');
+    row.style.cssText =
+      'display:block; width:100%; border:none; background:none; cursor:pointer;' +
+      'padding:6px 0; font-size:1.2rem; text-align:center;';
+    row.appendChild(rubyEl(line.hanzi, line.pinyin));
+    row.addEventListener('click', () => {
+      row.classList.add('animate-pop');
+      setTimeout(() => row.classList.remove('animate-pop'), 340);
+      playAudio(line.audio);
+    });
+    card.appendChild(row);
+  });
+
+  const all = document.createElement('button');
+  all.className = 'btn btn-secondary btn-full';
+  all.style.marginTop = '10px';
+  all.textContent = '🔊 从头听一遍';
+  all.addEventListener('click', () => playSequence(chant.lines.map(l => l.audio), null, 180));
+  card.appendChild(all);
+
+  return card;
+}
+
+/* ── 做任务 ───────────────────────────────────────────────────────── */
+
+function startMission() {
+  unlockAudio();
+  const lesson = currentLesson();
+  showScreen('game-screen');
+  document.getElementById('bottom-nav').classList.add('hidden');
+  runDailyMission(lesson, showResult);
+}
+
+function quitMission() {
+  stopAudio();
+  document.getElementById('bottom-nav').classList.remove('hidden');
+  navTo('home-screen');
+}
+
+function showResult(result) {
+  document.getElementById('bottom-nav').classList.remove('hidden');
+
+  const history = getLocal('history') || {};
+  history[getTodayString()] = { score: result.score, correct: result.correct };
+  setLocal('history', history);
+
+  const progress = checkProgress();
+  const fresh = awardStickers();
+
+  document.getElementById('result-score').textContent = result.score;
+  document.getElementById('result-correct').textContent =
+    '答对 ' + result.correct + ' / ' + result.total;
+
+  const ratio = result.correct / result.total;
+  document.getElementById('result-emoji').textContent =
+    ratio >= 0.9 ? '🏆' : ratio >= 0.6 ? '🎉' : '💪';
+
+  const streak = getStreak();
+  document.getElementById('result-streak').textContent =
+    streak.current > 1 ? '🔥 连续 ' + streak.current + ' 天' : '';
+
+  // Newly earned stickers
+  const stickerWrap = document.getElementById('result-stickers');
+  clearEl(stickerWrap);
+  fresh.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.style.cssText =
+      'display:inline-block; margin:8px 6px 0; padding:12px 16px; border-radius:18px;' +
+      'background:var(--paper-warm); border:2px solid var(--sun);';
+    const emoji = document.createElement('div');
+    emoji.style.fontSize = '2rem';
+    emoji.textContent = s.emoji;
+    const name = document.createElement('div');
+    name.style.cssText = 'font-size:0.78rem; margin-top:2px;';
+    name.textContent = '新贴纸 · ' + s.name;
+    el.append(emoji, name);
+    stickerWrap.appendChild(el);
+    setTimeout(() => el.classList.add('animate-pop'), 220 * (i + 1));
+  });
+
+  // Lesson unlocked
+  const unlockEl = document.getElementById('result-unlock');
+  clearEl(unlockEl);
+  if (progress && progress.unlocked) {
+    unlockEl.classList.remove('hidden');
+    const t = document.createElement('div');
+    t.style.cssText = 'font-weight:700; margin-bottom:4px;';
+    t.textContent = '第 ' + progress.mastered.order + ' 课学完啦！';
+    const n = document.createElement('div');
+    n.style.cssText = 'font-size:0.88rem; color:var(--ink-mid);';
+    n.textContent = '解锁第 ' + progress.unlocked.order + ' 课 · ' + progress.unlocked.title;
+    unlockEl.append(t, n);
+  } else {
+    unlockEl.classList.add('hidden');
+  }
+
+  showScreen('result-screen');
+}
+
+/* ── 贴纸册 ───────────────────────────────────────────────────────── */
+
+function renderStickers() {
+  const root = document.getElementById('sticker-content');
+  clearEl(root);
+
+  const earned = getEarnedStickers();
+  document.getElementById('sticker-count').textContent = earned.length;
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:10px;';
+
+  STICKERS.forEach(sticker => {
+    const has = earned.indexOf(sticker.id) !== -1;
+    const cell = document.createElement('div');
+    cell.style.cssText =
+      `border:2px ${has ? 'solid var(--sun)' : 'dashed var(--paper-edge)'}; border-radius:18px;
+       background:${has ? 'var(--paper-warm)' : 'transparent'};
+       padding:12px 6px; text-align:center; min-height:96px;
+       display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;`;
+
+    const emoji = document.createElement('div');
+    emoji.style.cssText = 'font-size:1.9rem;' + (has ? '' : 'filter:grayscale(1); opacity:0.25;');
+    emoji.textContent = has ? sticker.emoji : '❔';
+
+    const label = document.createElement('div');
+    label.style.cssText = 'font-size:0.68rem; color:var(--ink-light); line-height:1.4;';
+    label.textContent = has ? sticker.name : stickerHint(sticker);
+
+    cell.append(emoji, label);
+    if (has) {
+      cell.appendChild(rubyMini(sticker));
+      cell.style.cursor = 'pointer';
+    }
+    grid.appendChild(cell);
+  });
+
+  root.appendChild(grid);
+}
+
+function rubyMini(sticker) {
+  const el = document.createElement('div');
+  el.style.cssText = 'font-size:0.62rem; color:var(--ink-light); font-family:var(--font-pinyin);';
+  el.textContent = sticker.pinyin;
+  return el;
+}
+
+/* ── 家长 ─────────────────────────────────────────────────────────── */
+
+function renderParent() {
+  const root = document.getElementById('parent-content');
+  clearEl(root);
+
+  const strengths = getStrengths();
+  const streak = getStreak();
+  const state = getLessonState();
+
+  root.appendChild(statCard([
+    ['学会的字母', masteredSoundCount() + ' / 63'],
+    ['学完的课',   (state.masteredLessons || []).length + ' / 14'],
+    ['连续天数',   streak.current + ' 天'],
+    ['最长连续',   streak.longest + ' 天'],
+    ['总分',       getPoints() + ' 分'],
+  ]));
+
+  // Weakest sounds first — the actionable part for a parent.
+  const seen = SOUNDS.filter(s => strengths[s.id]);
+  const weak = seen
+    .sort((a, b) => (strengths[a.id].strength || 0) - (strengths[b.id].strength || 0))
+    .slice(0, 12);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.textContent = weak.length ? '最需要练的' : '还没有练习记录';
+  card.appendChild(label);
+
+  if (weak.length) {
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:8px;';
+    weak.forEach(s => {
+      const st = strengths[s.id].strength || 0;
+      const cell = document.createElement('button');
+      cell.style.cssText =
+        `border:2px solid ${strengthLabel(st).color}; border-radius:12px; background:var(--paper);
+         padding:8px 4px; cursor:pointer; font-family:var(--font-pinyin); font-size:1.3rem;`;
+      cell.textContent = s.text;
+      const pct = document.createElement('div');
+      pct.style.cssText = 'font-family:var(--font-han); font-size:0.62rem; color:var(--ink-light); margin-top:2px;';
+      pct.textContent = strengthLabel(st).text;
+      cell.appendChild(pct);
+      cell.addEventListener('click', () => playAudio(s.audio));
+      grid.appendChild(cell);
+    });
+    card.appendChild(grid);
+  }
+  root.appendChild(card);
+
+  root.appendChild(actionCard(
+    '音频检查',
+    '所有字母的读音都是提前合成好的。请先听一遍，特别是 eng 和 ong —— ' +
+    '这两个音没有合适的汉字可以合成，很可能不准。',
+    '去检查 →', () => navTo('audio-check-screen')));
+
+  root.appendChild(actionCard(
+    '数据',
+    '所有进度都存在这台设备上，没有账号，也不上传。',
+    '清空全部进度', resetAll));
+}
+
+function statCard(rows) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  rows.forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.style.cssText =
+      'display:flex; justify-content:space-between; padding:9px 0;' +
+      'border-bottom:1px solid var(--paper-edge); font-size:0.92rem;';
+    const l = document.createElement('span');
+    l.style.color = 'var(--ink-light)';
+    l.textContent = label;
+    const v = document.createElement('strong');
+    v.textContent = value;
+    row.append(l, v);
+    card.appendChild(row);
+  });
+  card.lastChild.style.borderBottom = 'none';
+  return card;
+}
+
+function actionCard(title, body, buttonText, onClick) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.textContent = title;
+
+  const p = document.createElement('p');
+  p.style.cssText = 'color:var(--ink-mid); font-size:0.88rem; line-height:1.7; margin-bottom:16px;';
+  p.textContent = body;
+
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary btn-full';
+  btn.textContent = buttonText;
+  btn.addEventListener('click', onClick);
+
+  card.append(label, p, btn);
   return card;
 }
 
 /* ── 音频检查 ─────────────────────────────────────────────────────────
  * Generated speech is the one part of this app that can be wrong in a way
- * no test catches, so a parent listens to all 63 once and marks failures.
- * Sounds flagged needsRecording are floated to the top: they are the two
- * that have no correct Chinese character to synthesise from. */
+ * no test catches, so a parent listens once and marks failures. The two
+ * sounds with no correct character to synthesise from float to the top. */
 
 function renderAudioCheck() {
   const root = document.getElementById('check-list');
   clearEl(root);
 
   const marks = getLocal('audio_check') || {};
-  const ordered = [...SOUNDS].sort((a, b) =>
-    (b.needsRecording ? 1 : 0) - (a.needsRecording ? 1 : 0));
+  const ordered = [...SOUNDS].sort((a, b) => (b.needsRecording ? 1 : 0) - (a.needsRecording ? 1 : 0));
 
   ordered.forEach(sound => {
     const row = document.createElement('div');
@@ -149,26 +706,25 @@ function renderAudioCheck() {
     const meta = document.createElement('div');
     meta.className = 'check-meta';
     meta.textContent = sound.needsRecording
-      ? `${sound.hanzi} · ${sound.recordNote || '需要自己录音'}`
-      : `合成自「${sound.hanzi}」`;
+      ? sound.hanzi + ' · ' + (sound.recordNote || '需要自己录音')
+      : '合成自「' + sound.hanzi + '」';
 
     const play = document.createElement('button');
     play.className = 'check-play';
     play.textContent = '▶';
-    play.setAttribute('aria-label', `播放 ${sound.text}`);
+    play.setAttribute('aria-label', '播放 ' + sound.text);
     play.addEventListener('click', () => playAudio(sound.audio));
 
     const ok = document.createElement('button');
     ok.className = 'check-mark' + (marks[sound.id] === 'ok' ? ' ok' : '');
     ok.textContent = '✓';
-    ok.setAttribute('aria-label', `${sound.text} 读得对`);
+    ok.setAttribute('aria-label', sound.text + ' 读得对');
+    ok.addEventListener('click', () => markAudio(sound.id, 'ok'));
 
     const bad = document.createElement('button');
     bad.className = 'check-mark' + (marks[sound.id] === 'bad' ? ' bad' : '');
     bad.textContent = '✗';
-    bad.setAttribute('aria-label', `${sound.text} 读得不对`);
-
-    ok.addEventListener('click', () => markAudio(sound.id, 'ok'));
+    bad.setAttribute('aria-label', sound.text + ' 读得不对');
     bad.addEventListener('click', () => markAudio(sound.id, 'bad'));
 
     row.append(letter, meta, play, ok, bad);
@@ -180,8 +736,8 @@ function renderAudioCheck() {
 
 function markAudio(soundId, verdict) {
   const marks = getLocal('audio_check') || {};
-  marks[soundId] = marks[soundId] === verdict ? undefined : verdict;
-  if (marks[soundId] === undefined) delete marks[soundId];
+  if (marks[soundId] === verdict) delete marks[soundId];
+  else marks[soundId] = verdict;
   setLocal('audio_check', marks);
   renderAudioCheck();
 }
@@ -198,7 +754,7 @@ function renderCheckSummary() {
 
   const label = document.createElement('div');
   label.className = 'section-label';
-  label.textContent = `需要重录 · ${badIds.length} 个`;
+  label.textContent = '需要重录 · ' + badIds.length + ' 个';
   box.appendChild(label);
 
   const list = document.createElement('div');
@@ -222,10 +778,15 @@ function renderCheckSummary() {
 
 function resetAll() {
   if (!confirm('清空这台设备上的全部进度？不能撤销。')) return;
-  ['started', 'name', 'strengths', 'lessons_state', 'streak', 'audio_check', 'stickers']
-    .forEach(removeLocal);
+  ['started', 'name', 'strengths', 'lessons_state', 'streak', 'audio_check',
+   'stickers', 'points', 'history', 'last_mission', 'last_decay'].forEach(removeLocal);
   showToast('已清空');
   setTimeout(() => location.reload(), 800);
+}
+
+function formatDate(dateStr) {
+  const [, m, d] = dateStr.split('-');
+  return parseInt(m, 10) + ' 月 ' + parseInt(d, 10) + ' 日';
 }
 
 let toastTimer = null;
@@ -241,14 +802,8 @@ function showToast(msg, duration = 2200) {
 
 document.addEventListener('DOMContentLoaded', () => {
   probeOverrides(SOUNDS);
-
-  // Any first tap unlocks audio, not just the start button — the child may
-  // land straight on the home screen on a return visit.
   document.addEventListener('pointerdown', unlockAudio, { once: true });
 
-  if (getLocal('started')) {
-    enterApp();
-  } else {
-    showScreen('start-screen');
-  }
+  if (getLocal('started')) enterApp();
+  else showScreen('start-screen');
 });

@@ -14,24 +14,21 @@
 
   <!-- ── 开始 ─────────────────────────────────────────────────────── -->
   <section id="start-screen" class="screen">
-    <div class="screen-content" style="padding-top:14vh;">
+    <div class="screen-content" style="padding-top:12vh;">
       <div class="card animate-fade-up" style="text-align:center;">
-
-        <!-- The four-line stave, with the app's name written on it -->
         <div class="stave stave-4" style="height:132px; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
           <span style="font-family:var(--font-pinyin); font-size:2.9rem; color:var(--ink); transform:translateY(8px);">
             p<span class="t1">ī</span>n y<span class="t1">ī</span>n
           </span>
         </div>
-
         <h1 style="font-size:2rem; margin-bottom:6px;">拼音岛</h1>
-        <p style="color:var(--ink-light); font-size:0.9rem; margin-bottom:26px;">
+        <p style="color:var(--ink-light); font-size:0.9rem; margin-bottom:24px;">
           一课一课，跟着课本学拼音
         </p>
-
-        <button class="btn btn-primary btn-full" onclick="handleStart()">
-          开始 →
-        </button>
+        <input id="name-input" class="btn btn-secondary btn-full" type="text"
+               placeholder="你叫什么名字？" maxlength="12" autocomplete="off"
+               style="text-align:center; margin-bottom:14px; font-weight:600;">
+        <button class="btn btn-primary btn-full" onclick="handleStart()">开始 →</button>
       </div>
     </div>
   </section>
@@ -42,47 +39,114 @@
       <div class="screen-header-inner">
         <div>
           <div class="header-title">你好，<span id="home-name">小朋友</span></div>
-          <div class="header-subtitle">今天学一点拼音</div>
+          <div class="header-subtitle" id="home-date">—</div>
         </div>
-        <div id="home-streak" class="hidden" style="font-size:0.95rem;">🔥 <span id="home-streak-n">0</span></div>
+        <div style="text-align:right;">
+          <div id="home-streak" style="font-size:1rem; font-weight:700;">🔥 <span id="home-streak-n">0</span></div>
+          <div class="header-subtitle">⭐ <span id="home-points">0</span></div>
+        </div>
       </div>
     </div>
 
     <div class="screen-content">
-      <div class="card" style="text-align:center;">
+      <div class="card" id="home-mission-card" style="text-align:center;">
         <div class="section-label">今天的任务</div>
-        <p style="color:var(--ink-light); font-size:0.9rem; margin:14px 0 18px;">
-          每日任务还没做好，先去听一听所有的字母。
-        </p>
-        <button class="btn btn-primary btn-full" onclick="navTo('sounds-screen')">
-          🔊 听一听
+        <div id="home-lesson-title" style="font-size:1.6rem; font-weight:700; margin:8px 0 4px;">—</div>
+        <div id="home-lesson-sub" style="font-size:0.85rem; color:var(--ink-light); margin-bottom:18px;">—</div>
+        <button class="btn btn-primary btn-full" id="home-play-btn" onclick="startMission()">
+          ▶ 开始，5 分钟
         </button>
+        <div id="home-done-msg" class="hidden" style="margin-top:12px; font-size:0.85rem; color:var(--ink-light);">
+          今天的任务做完啦！再来一次也可以。
+        </div>
+      </div>
+
+      <div class="card" onclick="navTo('lesson-screen')" style="cursor:pointer;">
+        <div class="section-label">这一课学什么</div>
+        <div id="home-lesson-sounds" class="sounds-grid" style="grid-template-columns:repeat(auto-fill,minmax(78px,1fr));"></div>
       </div>
 
       <div class="card">
-        <div class="section-label">课程进度</div>
-        <p style="color:var(--ink-light); font-size:0.88rem; line-height:1.7;">
-          14 课，跟 2024 人教版一年级上册的顺序一样：<br>
-          <strong style="color:var(--ink);">a o e</strong> →
-          <strong style="color:var(--ink);">i u ü</strong> →
-          声母 → 复韵母 → 鼻韵母
-        </p>
+        <div class="section-label">这一周</div>
+        <div id="home-week" style="display:flex; justify-content:space-between; gap:6px;"></div>
       </div>
     </div>
   </section>
 
-  <!-- ── 字母表 ───────────────────────────────────────────────────── -->
-  <section id="sounds-screen" class="screen hidden">
+  <!-- ── 拼音王国 ─────────────────────────────────────────────────── -->
+  <section id="map-screen" class="screen hidden">
     <div class="screen-header">
       <div class="screen-header-inner">
         <div>
-          <div class="header-title">字母表</div>
-          <div class="header-subtitle">点一下就能听到</div>
+          <div class="header-title">拼音王国</div>
+          <div class="header-subtitle">14 座小岛，一课一座</div>
         </div>
-        <div id="sounds-count" class="header-subtitle"></div>
+        <div class="header-subtitle"><span id="map-done">0</span> / 14</div>
       </div>
     </div>
-    <div class="screen-content" id="sounds-content"></div>
+    <div class="screen-content" id="map-content"></div>
+  </section>
+
+  <!-- ── 一课的详情 ───────────────────────────────────────────────── -->
+  <section id="lesson-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <button class="btn btn-secondary" style="padding:8px 14px; min-height:0; font-size:0.85rem;"
+                onclick="navTo('map-screen')">← 王国</button>
+        <div class="header-title" id="lesson-header-title" style="font-size:1.1rem;"></div>
+      </div>
+    </div>
+    <div class="screen-content" id="lesson-content"></div>
+  </section>
+
+  <!-- ── 做任务 ───────────────────────────────────────────────────── -->
+  <section id="game-screen" class="screen hidden">
+    <div style="max-width:560px; margin:0 auto; padding:calc(12px + env(safe-area-inset-top)) 18px 4px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+        <button class="btn btn-secondary" style="padding:6px 12px; min-height:0; font-size:0.8rem;"
+                onclick="quitMission()">✕</button>
+        <div style="flex:1; height:12px; border-radius:999px; background:var(--paper-edge); overflow:hidden;">
+          <div id="mission-progress-fill" style="height:100%; width:0%; background:var(--sea); border-radius:999px; transition:width 0.3s;"></div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:0.78rem; color:var(--ink-light);">
+        <span id="mission-progress-label">1 / 10</span>
+        <span id="mission-score">0 分</span>
+      </div>
+    </div>
+    <div class="screen-content" id="game-area" style="padding-top:14px;"></div>
+  </section>
+
+  <!-- ── 做完了 ───────────────────────────────────────────────────── -->
+  <section id="result-screen" class="screen hidden">
+    <div class="screen-content" style="padding-top:8vh;">
+      <div class="card" style="text-align:center;">
+        <div id="result-emoji" style="font-size:3.4rem; margin-bottom:6px;">🎉</div>
+        <div class="section-label">今天的成绩</div>
+        <div id="result-score" style="font-size:3rem; font-weight:700; margin:6px 0;">0</div>
+        <div id="result-correct" style="font-size:0.95rem; color:var(--ink-light); margin-bottom:6px;">0 / 10</div>
+        <div id="result-streak" style="font-size:0.9rem; margin-bottom:18px;"></div>
+        <div id="result-stickers"></div>
+        <div id="result-unlock" class="hidden" style="margin:16px 0; padding:14px; border-radius:16px; background:var(--sea-pale);"></div>
+        <button class="btn btn-primary btn-full" onclick="navTo('home-screen')" style="margin-top:12px;">
+          回家
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 贴纸册 ───────────────────────────────────────────────────── -->
+  <section id="sticker-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <div>
+          <div class="header-title">贴纸册</div>
+          <div class="header-subtitle">攒满 40 张</div>
+        </div>
+        <div class="header-subtitle"><span id="sticker-count">0</span> / 40</div>
+      </div>
+    </div>
+    <div class="screen-content" id="sticker-content"></div>
   </section>
 
   <!-- ── 家长 ─────────────────────────────────────────────────────── -->
@@ -95,29 +159,7 @@
         </div>
       </div>
     </div>
-    <div class="screen-content">
-      <div class="card">
-        <div class="section-label">音频检查</div>
-        <p style="color:var(--ink-mid); font-size:0.88rem; line-height:1.7; margin-bottom:16px;">
-          所有字母的读音都是提前合成好的。请先听一遍，
-          特别是 <strong>eng</strong> 和 <strong>ong</strong> —— 这两个音没有
-          合适的汉字可以合成，很可能不准。
-        </p>
-        <button class="btn btn-secondary btn-full" onclick="navTo('audio-check-screen')">
-          去检查 →
-        </button>
-      </div>
-
-      <div class="card">
-        <div class="section-label">数据</div>
-        <p style="color:var(--ink-mid); font-size:0.88rem; line-height:1.7; margin-bottom:16px;">
-          所有进度都存在这台设备上，没有账号，也不上传。
-        </p>
-        <button class="btn btn-secondary btn-full" onclick="resetAll()">
-          清空全部进度
-        </button>
-      </div>
-    </div>
+    <div class="screen-content" id="parent-content"></div>
   </section>
 
   <!-- ── 音频检查 ─────────────────────────────────────────────────── -->
@@ -131,9 +173,8 @@
     </div>
     <div class="screen-content">
       <p style="color:var(--ink-mid); font-size:0.86rem; line-height:1.7; margin-bottom:18px;">
-        逐个播放，读得对就点 ✓，不对就点 ✗。
-        标记为 ✗ 的会列在最下面，自己录一段
-        存到 <code>audio/overrides/</code> 里就会自动替换。
+        逐个播放，读得对就点 ✓，不对就点 ✗。标记为 ✗ 的会列在最下面，
+        自己录一段存到 <code>audio/overrides/</code> 里就会自动替换。
       </p>
       <div id="check-list"></div>
       <div id="check-summary" class="card hidden" style="margin-top:18px;"></div>
@@ -145,8 +186,11 @@
     <button class="nav-btn active" data-screen="home-screen" onclick="navTo('home-screen', this)">
       <span class="nav-icon">🏠</span><span class="nav-label">首页</span>
     </button>
-    <button class="nav-btn" data-screen="sounds-screen" onclick="navTo('sounds-screen', this)">
-      <span class="nav-icon">🔤</span><span class="nav-label">字母表</span>
+    <button class="nav-btn" data-screen="map-screen" onclick="navTo('map-screen', this)">
+      <span class="nav-icon">🗺</span><span class="nav-label">王国</span>
+    </button>
+    <button class="nav-btn" data-screen="sticker-screen" onclick="navTo('sticker-screen', this)">
+      <span class="nav-icon">📖</span><span class="nav-label">贴纸册</span>
     </button>
     <button class="nav-btn" data-screen="parent-screen" onclick="navTo('parent-screen', this)">
       <span class="nav-icon">👨‍👩‍👧</span><span class="nav-label">家长</span>
@@ -160,6 +204,22 @@
   <script src="lib/ruby.js"></script>
   <script src="lib/audio.js"></script>
   <script src="data/sounds.js"></script>
+  <script src="data/syllables.js"></script>
+  <script src="data/stickers.js"></script>
+  <script src="lib/strength.js"></script>
+  <script src="lib/scoring.js"></script>
+  <script src="lib/streaks.js"></script>
+  <script src="data/lessons/_registry.js"></script>
+  <script src="data/lessons/lessons.js"></script>
+  <script src="lib/selection.js"></script>
+  <script src="lib/progress.js"></script>
+  <script src="lib/stickers.js"></script>
+  <script src="games/_ui.js"></script>
+  <script src="games/listenPick.js"></script>
+  <script src="games/toneTrain.js"></script>
+  <script src="games/blendBuilder.js"></script>
+  <script src="games/sharpEyes.js"></script>
+  <script src="games/dailyMission.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

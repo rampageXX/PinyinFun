@@ -19,12 +19,20 @@ Full design: `docs/PLAN.md`.
 
 ## Status
 
-Early. What exists so far:
+Playable end to end. All 14 lessons, all four minigames, the daily mission,
+the map, the sticker album and the parent dashboard are built and tested.
 
-- [x] `data/sounds.js` — all 63 sounds, validated (23 声母 + 24 韵母 + 16 整体认读音节)
-- [x] `tools/gen_audio.py` — audio generation pipeline (not yet run)
-- [x] `docs/PLAN.md` — the full approved design
-- [ ] everything else — see Build Order
+- [x] `data/sounds.js` — 63 sounds (23 声母 + 24 韵母 + 16 整体认读音节)
+- [x] `data/syllables.js` — 277 syllables, 54 三拼, generated
+- [x] `audio/` — 641 MP3s
+- [x] `data/lessons/lessons.js` — all 14 lessons
+- [x] four minigames + `dailyMission.js`
+- [x] progression, streaks, scoring, stickers, map, parent dashboard
+- [x] `tools/verify_data.py`, `tests/test_app.py` — 10 tests, all passing
+
+Not done: the 音频检查 pass with a human ear (see Audio), and using it with
+the child. Lessons 1–2 have no blendable syllables, so 拼一拼 and 声调小火车
+only start at lesson 3 — that is correct, not a gap.
 
 ## Tech Stack
 
@@ -77,9 +85,9 @@ data/
   stickers.js       # 40 sticker definitions
   lessons/
     _registry.js    # registerLesson(), getLessonById(), lesson state
-    _template.js    # authoring template
-    lesson01..14.js
+    lessons.js      # all 14 lessons — thin, they reference sounds by id
 games/
+  _ui.js            # shared game chrome: header, speaker, feedback timing
   listenPick.js     # 听音选一选
   blendBuilder.js   # 拼一拼 — drag 声母+韵母, the core skill
   toneTrain.js      # 声调小火车
@@ -92,7 +100,8 @@ audio/
   sheng/ yun/ zheng/ syl/ word/ chant/ sfx/
   overrides/        # hand-recorded MP3s that win over generated ones
 tools/
-  gen_audio.py      # ✅ one-time audio generation
+  gen_audio.py      # audio generation
+  gen_syllables.py  # generates data/syllables.js from the curriculum
   verify_data.py    # data integrity checks
 tests/test_app.py   # Playwright smoke test
 ```
@@ -163,25 +172,28 @@ to unlock playback for the session.
 - Touch targets ≥64px. Chunky rounded cards, thick borders. Built for small fingers.
 - No typing anywhere. Tap and drag only.
 
-## Build Order
+## Rules that must not be broken
 
-Each step must end in something you can open and check.
+These are the invariants a change can quietly violate, and `tests/test_app.py`
+guards each one:
 
-1. Skeleton — `index.html`, `styles.css`, `lib/storage.js`, `lib/ruby.js`, `app.js` nav
-2. ✅ `data/sounds.js`
-3. Audio — run `tools/gen_audio.py`, write `lib/audio.js`, add the 音频检查 screen.
-   **Listen before continuing; everything downstream depends on this.**
-4. Lessons 1–4 + `data/syllables.js` + lesson screen stage ①
-5. `listenPick.js` + `toneTrain.js`
-6. `blendBuilder.js` (needs the 三拼音节 layout from lesson 5 on)
-7. `sharpEyes.js`
-8. Progression — `strength.js`, `progress.js`, lesson stages ②③④, mastery/unlock
-9. Daily mission — `selection.js`, `scoring.js`, `streaks.js`, `dailyMission.js`, home + result
-10. 拼音王国 map screen
-11. Sticker album
-12. Lessons 5–14, regenerate audio
-13. Parent dashboard
-14. Polish, sound effects, deploy
+1. **Never show a letter before its lesson.** Distractors come from
+   `availableSounds(order)`; a `confusable` pointing at a later lesson is
+   dropped, not leaked. Offering ü in lesson 1 asks the child to rule out
+   something she has never seen.
+2. **Tone marks follow 标调规则.** `writeTone()` implements 有a不放过，没a找o e，
+   i u 并列标在后. A mis-placed mark teaches the error.
+3. **Pinyin is lowercase.** No `text-transform: uppercase` anywhere near it.
+4. **Latin letters need a single-storey `a` and `g`** — see `--font-pinyin`.
+5. **A syllable never precedes either of its parts** (`gen_syllables.py`
+   assigns each to the lesson of its last-introduced part).
+
+## What is left
+
+- The 音频检查 pass by ear, especially `eng` and `ong`
+- Sound effects for correct/wrong/unlock
+- Trying it with the child, and tuning from what actually confuses her
+- Optional: GitHub Pages deploy (already `.nojekyll`-ready)
 
 ## Verification
 

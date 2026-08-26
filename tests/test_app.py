@@ -228,24 +228,25 @@ def run_scripted_mission(page, wrong_answers=0):
     return False
 
 
-def test_clearing_run_does_not_open_the_next_lesson_today(page):
-    """Clearing the lesson finishes it — and she still waits until tomorrow."""
+def test_clearing_a_lesson_opens_the_next_one_immediately(page):
+    """It is a game: clear the level, the next one is there."""
     page.click("#start-screen .btn-primary")
-    assert run_scripted_mission(page, wrong_answers=1)   # 9/10 is enough
+    assert run_scripted_mission(page, wrong_answers=1)   # 9/10 clears
 
-    after = page.evaluate("""() => ({
+    after = page.evaluate(r"""() => ({
         cleared: getLessonState().clearedOn,
         mastered: getLessonState().masteredLessons,
         current: getLessonState().currentLessonId,
         unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.id),
         stickers: getEarnedStickers(),
+        unlockText: document.getElementById('result-unlock').innerText.replace(/\s+/g, ' ').trim(),
     })""")
-    assert "lesson-01" in after["cleared"], "a perfect run should clear the lesson"
+    assert "lesson-01" in after["cleared"]
     assert "lesson-01" in after["mastered"]
-    assert "st-01" in after["stickers"], "finishing a lesson should award its sticker"
-    # The whole point of the pacing: no racing ahead on the same day.
-    assert after["current"] == "lesson-01", "she stays on today's lesson"
-    assert after["unlocked"] == ["lesson-01"], "lesson 2 must not open until tomorrow"
+    assert "st-01" in after["stickers"], "clearing a lesson should award its sticker"
+    assert after["current"] == "lesson-02", "she should move straight on"
+    assert after["unlocked"] == ["lesson-01", "lesson-02"]
+    assert "解锁第 2 课" in after["unlockText"], after["unlockText"]
 
 
 def test_nine_out_of_ten_clears_but_eight_does_not(page):
@@ -260,38 +261,47 @@ def test_nine_out_of_ten_clears_but_eight_does_not(page):
     })""")
     assert after["cleared"] == {}, "8/10 must not clear the lesson"
     assert after["current"] == "lesson-01"
-    assert after["unlocked"] == ["lesson-01"]
+    assert after["unlocked"] == ["lesson-01"], "the next island stays shut"
 
     # Same child, same lesson, one better: that should be enough.
     assert run_scripted_mission(page, wrong_answers=1)   # 9/10
-    after = page.evaluate("() => getLessonState().clearedOn || {}")
-    assert "lesson-01" in after, "9/10 should clear the lesson"
+    after = page.evaluate("""() => ({
+        cleared: getLessonState().clearedOn || {},
+        current: getLessonState().currentLessonId,
+    })""")
+    assert "lesson-01" in after["cleared"], "9/10 should clear the lesson"
+    assert after["current"] == "lesson-02"
 
 
-def test_the_next_lesson_opens_the_following_day(page):
-    """Clear today, come back tomorrow, and lesson 2 is waiting."""
+def test_several_lessons_can_be_cleared_in_one_sitting(page):
+    """No calendar anywhere: keep clearing and she keeps advancing."""
     page.click("#start-screen .btn-primary")
-    assert run_scripted_mission(page, wrong_answers=1)   # 9/10 clears
+    reached = []
+    for _ in range(3):
+        assert run_scripted_mission(page, wrong_answers=0)
+        reached.append(page.evaluate("() => getLessonState().currentLessonId"))
+        page.evaluate("() => navTo('home-screen')")
 
-    # Roll the clearing back one day — the same state as returning tomorrow.
-    page.evaluate("""() => {
-        const st = getLessonState();
-        const d = new Date();
-        d.setDate(d.getDate() - 1);
-        st.clearedOn['lesson-01'] = toDateString(d);
-        saveLessonState(st);
-    }""")
-    opened = page.evaluate("() => { const n = advanceIfDue(); return n && n.id; }")
-    assert opened == "lesson-02", "yesterday's perfect run should open lesson 2"
+    assert reached == ["lesson-02", "lesson-03", "lesson-04"], reached
+    unlocked = page.evaluate("() => LESSONS.filter(isLessonUnlocked).map(l => l.order)")
+    assert unlocked == [1, 2, 3, 4], unlocked
+
+
+def test_replaying_a_cleared_lesson_does_not_drag_her_back(page):
+    """Practising 课1 again must not reset her to 课2."""
+    page.click("#start-screen .btn-primary")
+    assert run_scripted_mission(page, wrong_answers=0)          # clears 课1 -> 课2
+    assert page.evaluate("() => getLessonState().currentLessonId") == "lesson-02"
+
+    page.evaluate("() => setCurrentLesson('lesson-01')")        # go back to practise
+    assert run_scripted_mission(page, wrong_answers=0)          # ace it again
 
     after = page.evaluate("""() => ({
         current: getLessonState().currentLessonId,
-        unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.id),
+        unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.order),
     })""")
-    assert after["current"] == "lesson-02"
-    assert after["unlocked"] == ["lesson-01", "lesson-02"]
-    # One step only — a week away must not skip her past lessons she never did.
-    assert page.evaluate("() => advanceIfDue()") is None
+    assert after["current"] == "lesson-02", "a replay should not move her backwards"
+    assert after["unlocked"] == [1, 2]
 
 
 # ── audio ────────────────────────────────────────────────────────────

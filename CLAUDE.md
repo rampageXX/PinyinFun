@@ -138,11 +138,11 @@ tests/test_app.py   # Playwright smoke test
 - **Scoring**: 100 base + up to 50 speed bonus (full within 12s) + 25 every 3rd correct in a row.
 - **Daily selection**: seeded by the date string so a reload mid-session resumes the
   same 10 items. 60% current lesson, 40% weakness-weighted review of earlier lessons.
-- **Pacing**: a mission at ≥`CLEAR_RATIO` (9/10) *clears* the current lesson and
-  awards its sticker. The next lesson opens **the following day** — one lesson a
-  day is the fastest the app will go, matching the school week. `advanceIfDue()`
-  runs on every app entry and moves exactly one step, so a week away cannot skip
-  her past lessons she never did. Replaying a cleared lesson is always allowed.
+- **Progression**: it works like a game — a mission at ≥`CLEAR_RATIO` (9/10)
+  *clears* the current lesson, awards its sticker and opens the next one
+  immediately. No calendar anywhere: she can clear several in one sitting.
+  Order is still the textbook's, so no letter appears out of sequence.
+  Replaying a cleared lesson is always allowed and never moves her backwards.
 
 ## Audio
 
@@ -234,9 +234,9 @@ guards each one:
 4. **Latin letters need a single-storey `a` and `g`** — see `--font-pinyin`.
 5. **A syllable never precedes either of its parts** (`gen_syllables.py`
    assigns each to the lesson of its last-introduced part).
-6. **A lesson never opens on the day the one before it was cleared.**
-   `isLessonUnlocked()` compares `clearedOn[prev]` against today, so neither
-   the map nor `setCurrentLesson()` can let her race ahead in one sitting.
+6. **A lesson opens only once the one before it is cleared.**
+   `isLessonUnlocked()` reads `clearedOn[prev]`, so the map can never show an
+   island whose letters she has not reached yet. Clearing is the only key.
 7. **Audio never outlives the question that started it.** Elements are cached
    one per file, so a listener left behind on a shared clip resurfaces in a
    later lesson — 课3's bā blend shares `audio/yun/a.mp3` with 课1's a, which

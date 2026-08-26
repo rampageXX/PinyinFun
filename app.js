@@ -50,10 +50,8 @@ function handleStart() {
 function enterApp() {
   document.getElementById('bottom-nav').classList.remove('hidden');
   applyDailyDecay();
-  const opened = advanceIfDue();          // yesterday's perfect run pays off now
   const broke = checkStreakBreak();
   navTo('home-screen');
-  if (opened) showToast('第 ' + opened.order + ' 课开门啦 · ' + opened.title, 3200);
   if (broke.frozen) showToast('昨天没练，用掉了这个月的一次免死金牌 ❄️', 3200);
   else if (broke.broken) showToast('连续天数重新开始，没关系，今天继续 💪', 3200);
 }
@@ -521,14 +519,12 @@ function showResult(result) {
     unlockEl.classList.remove('hidden');
     const t = document.createElement('div');
     t.style.cssText = 'font-weight:700; margin-bottom:4px;';
-    t.textContent = '第 ' + progress.cleared.order + ' 课满分通过！⭐';
+    t.textContent = '第 ' + progress.cleared.order + ' 课过关啦！⭐';
     const n = document.createElement('div');
     n.style.cssText = 'font-size:0.88rem; color:var(--ink-mid);';
-    // Tomorrow, not now — the wait is the point, and saying so turns it into
-    // something to look forward to rather than a door that will not open.
-    n.textContent = progress.next
-      ? '明天见第 ' + progress.next.order + ' 课 · ' + progress.next.title
-      : '十四课全部学完啦！';
+    n.textContent = progress.unlocked
+      ? '解锁第 ' + progress.unlocked.order + ' 课 · ' + progress.unlocked.title
+      : (progress.next ? '第 ' + progress.next.order + ' 课已经开啦' : '十四课全部学完啦！');
     unlockEl.append(t, n);
   } else if (progress && !progress.alreadyCleared) {
     unlockEl.classList.remove('hidden');

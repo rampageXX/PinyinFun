@@ -237,6 +237,12 @@ guards each one:
 6. **A lesson never opens on the day the one before it was cleared.**
    `isLessonUnlocked()` compares `clearedOn[prev]` against today, so neither
    the map nor `setCurrentLesson()` can let her race ahead in one sitting.
+7. **Audio never outlives the question that started it.** Elements are cached
+   one per file, so a listener left behind on a shared clip resurfaces in a
+   later lesson — 课3's bā blend shares `audio/yun/a.mp3` with 课1's a, which
+   once made tapping a in 课1 play bā. Every play detaches its own listeners
+   when superseded, and carries a `generation` so a stale callback cannot
+   restart a sequence from a lesson she has left.
 
 ## What is left
 

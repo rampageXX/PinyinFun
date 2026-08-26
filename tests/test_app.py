@@ -296,6 +296,69 @@ def test_the_next_lesson_opens_the_following_day(page):
 
 # ── audio ────────────────────────────────────────────────────────────
 
+def test_audio_does_not_leak_between_lessons(page):
+    """A 拼读 sequence cut short must not resume inside a later lesson.
+
+    Audio elements are cached one per file, and 课3's bā blend is
+    [b, ā, bā] — so it shares audio/yun/a.mp3 with 课1's letter a. If an
+    interrupted sequence leaves its 'ended' handler on that shared element,
+    tapping a in 课1 later replays the rest of 课3's sequence, and the child
+    hears bā in a lesson that has no 声母 in it at all.
+    """
+    page.click("#start-screen .btn-primary")
+    played = page.evaluate("""async () => {
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').slice(-3).join('/'));
+            return Promise.resolve();
+        };
+        const tick = () => new Promise(r => setTimeout(r, 30));
+
+        // 课3: start the blend, let "b" finish, then walk away mid-sequence.
+        playSequence(['audio/sheng/b.mp3', 'audio/yun/a.mp3', 'audio/syl/ba1.mp3'], null, 0);
+        await tick();
+        getAudioEl('audio/sheng/b.mp3').dispatchEvent(new Event('ended'));
+        await tick();
+        stopAudio();
+        await tick();
+
+        // 课1: she taps the letter a.
+        played.length = 0;
+        playAudio('audio/yun/a.mp3');
+        await tick();
+        getAudioEl('audio/yun/a.mp3').dispatchEvent(new Event('ended'));
+        await tick();
+
+        HTMLMediaElement.prototype.play = orig;
+        return played;
+    }""")
+    assert played == ["audio/yun/a.mp3"], (
+        f"tapping a in 课1 should play only a, but played {played}")
+
+
+def test_stopping_audio_cancels_a_pending_sequence(page):
+    """stopAudio() must kill the gap timer too, not just the current clip."""
+    page.click("#start-screen .btn-primary")
+    played = page.evaluate("""async () => {
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').slice(-3).join('/'));
+            return Promise.resolve();
+        };
+        playSequence(['audio/sheng/b.mp3', 'audio/yun/a.mp3', 'audio/syl/ba1.mp3'], null, 40);
+        await new Promise(r => setTimeout(r, 20));
+        getAudioEl('audio/sheng/b.mp3').dispatchEvent(new Event('ended'));
+        stopAudio();                       // during the gap, before "ā" starts
+        await new Promise(r => setTimeout(r, 200));
+        HTMLMediaElement.prototype.play = orig;
+        return played;
+    }""")
+    assert played == ["audio/sheng/b.mp3"], f"sequence continued after stop: {played}"
+
+
+
 def test_every_sound_has_an_audio_file(page):
     missing = page.evaluate("""async () => {
         const bad = [];

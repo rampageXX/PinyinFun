@@ -402,7 +402,51 @@ def test_a_big_lesson_takes_more_than_one_sitting(page):
     assert after["current"] == "lesson-09"
 
 
-# ── 故事 ───────────────────────────────────────────────────
+def test_every_rule_can_be_read_aloud(page):
+    """The 口诀 is the one thing on a lesson screen she cannot decode herself.
+
+    It is written for a reader — 「前音轻短后音重，两音相连猛一碰。」 — so it
+    needs a voice, and where it prints letters it needs a `say` in 呼读音
+    characters, or the voice says the English letter names.
+    """
+    state = page.evaluate("""() => {
+        const silent = [], unsayable = [];
+        LESSONS.forEach(l => {
+            if (!l.rule) return;
+            if (!l.rule.audio) silent.push(l.id);
+            if (/(?:^|[^一-鿿])[a-zü]/.test(l.rule.text) && !l.rule.say) {
+                unsayable.push(l.id);
+            }
+        });
+        return { silent, unsayable, rules: LESSONS.filter(l => l.rule).length };
+    }""")
+    assert state["rules"] == 14
+    assert state["silent"] == [], f"rules with no audio: {state['silent']}"
+    assert state["unsayable"] == [], f"rules printing letters with no say: {state['unsayable']}"
+
+
+def test_tapping_the_rule_plays_it(page):
+    page.click("#start-screen .btn-primary")
+    played = page.evaluate("""async () => {
+        viewingLessonId = 'lesson-03';
+        navTo('lesson-screen');
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').slice(-2).join('/'));
+            return Promise.resolve();
+        };
+        const btn = [...document.querySelectorAll('#lesson-content button')]
+            .find(b => (b.getAttribute('aria-label') || '').indexOf('读一读') === 0);
+        if (btn) btn.click();
+        await new Promise(r => setTimeout(r, 60));
+        HTMLMediaElement.prototype.play = orig;
+        return played;
+    }""")
+    assert played == ["rule/lesson-03.mp3"], played
+
+
+# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
 
 def test_stories_load_with_art_and_audio(page):
     counts = page.evaluate("""() => ({

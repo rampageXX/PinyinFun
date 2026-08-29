@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = '7eb3ed9bc48e';
+const VERSION = '116683fc430a';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */
@@ -51,7 +51,7 @@ const SHELL = [
   'art/yonge.svg',
 ];
 
-/* 759 MP3s. Best-effort — a single failure must not fail the install. */
+/* 773 MP3s. Best-effort — a single failure must not fail the install. */
 const AUDIO = [
   'audio/chant/l01-1.mp3',
   'audio/chant/l01-2.mp3',
@@ -92,6 +92,20 @@ const AUDIO = [
   'audio/chant/l13-2.mp3',
   'audio/chant/l14-1.mp3',
   'audio/chant/l14-2.mp3',
+  'audio/rule/lesson-01.mp3',
+  'audio/rule/lesson-02.mp3',
+  'audio/rule/lesson-03.mp3',
+  'audio/rule/lesson-04.mp3',
+  'audio/rule/lesson-05.mp3',
+  'audio/rule/lesson-06.mp3',
+  'audio/rule/lesson-07.mp3',
+  'audio/rule/lesson-08.mp3',
+  'audio/rule/lesson-09.mp3',
+  'audio/rule/lesson-10.mp3',
+  'audio/rule/lesson-11.mp3',
+  'audio/rule/lesson-12.mp3',
+  'audio/rule/lesson-13.mp3',
+  'audio/rule/lesson-14.mp3',
   'audio/sheng/b.mp3',
   'audio/sheng/c.mp3',
   'audio/sheng/ch.mp3',

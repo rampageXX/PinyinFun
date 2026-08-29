@@ -29,6 +29,7 @@ registerLesson({
   rule: {
     id: 'rule-tones', title: '四声',
     text: '一声平，二声扬，三声拐弯，四声降。',
+    audio: 'audio/rule/lesson-01.mp3',
     tones: ['ā', 'á', 'ǎ', 'à'],
   },
   words: [
@@ -61,6 +62,8 @@ registerLesson({
   rule: {
     id: 'rule-i-dot', title: 'i 标调去点',
     text: 'i 戴上帽子，就要把头上的点摘下来：i → ī í ǐ ì。',
+    say: '小 衣 戴上帽子，就要把头上的点摘下来。',
+    audio: 'audio/rule/lesson-02.mp3',
     tones: ['ī', 'í', 'ǐ', 'ì'],
   },
   words: [
@@ -95,6 +98,7 @@ registerLesson({
   rule: {
     id: 'rule-liangpin', title: '两拼音节',
     text: '前音轻短后音重，两音相连猛一碰。',
+    audio: 'audio/rule/lesson-03.mp3',
     demo: { parts: ['b', 'ā'], result: 'bā', hanzi: '八' },
   },
   words: [
@@ -127,6 +131,8 @@ registerLesson({
   rule: {
     id: 'rule-nl-v', title: 'n l 与 ü',
     text: 'n 和 l 很客气，小 ü 的帽子不用摘：nü lü。',
+    say: '讷 和 勒 很客气，小 迂 的帽子不用摘：女，绿。',
+    audio: 'audio/rule/lesson-04.mp3',
     demo: { parts: ['l', 'ǜ'], result: 'lǜ', hanzi: '绿' },
   },
   words: [
@@ -162,6 +168,7 @@ registerLesson({
   rule: {
     id: 'rule-sanpin', title: '三拼音节',
     text: '声轻介快韵母响，三音连读很顺当。',
+    audio: 'audio/rule/lesson-05.mp3',
     demo: { parts: ['g', 'u', 'ā'], result: 'guā', hanzi: '瓜' },
   },
   words: [
@@ -193,6 +200,8 @@ registerLesson({
   rule: {
     id: 'rule-jqx-v', title: 'j q x 见 ü 去两点',
     text: '小 ü 有礼貌，见了 j q x，摘下帽子敬个礼：jü → ju。',
+    say: '小 迂 有礼貌，见了 基、欺、希，摘下帽子敬个礼：居。',
+    audio: 'audio/rule/lesson-06.mp3',
     demo: { parts: ['j', 'ü'], result: 'jú', hanzi: '橘', note: '写作 ju，读作 jü' },
   },
   words: [
@@ -226,6 +235,7 @@ registerLesson({
   rule: {
     id: 'rule-zhengti', title: '整体认读音节',
     text: '整体认读音节不能拼读，看见了就直接读出来。',
+    audio: 'audio/rule/lesson-07.mp3',
     demo: { parts: ['zi'], result: 'zì', hanzi: '字' },
   },
   words: [
@@ -257,6 +267,8 @@ registerLesson({
   rule: {
     id: 'rule-pingqiao', title: '平舌音和翘舌音',
     text: 'z c s 舌头平，zh ch sh r 舌头翘。念一念：zi—zhi，ci—chi，si—shi。',
+    say: '资、雌、思，舌头平。知、蚩、诗、日，舌头翘。念一念：资，知。雌，蚩。思，诗。',
+    audio: 'audio/rule/lesson-08.mp3',
     demo: { parts: ['zh', 'ǐ'], result: 'zhǐ', hanzi: '纸' },
   },
   words: [
@@ -290,6 +302,8 @@ registerLesson({
   rule: {
     id: 'rule-y-v', title: 'y 见 ü 也去两点',
     text: 'y 和小 ü 在一起，两点同样要摘掉：yü → yu，读作 yü。',
+    say: '衣 和小 迂 在一起，两点同样要摘掉，读作 迂。',
+    audio: 'audio/rule/lesson-09.mp3',
     demo: { parts: ['y', 'ü'], result: 'yú', hanzi: '鱼' },
   },
   words: [
@@ -322,6 +336,8 @@ registerLesson({
   rule: {
     id: 'rule-biaodiao', title: '标调规则',
     text: '有 a 不放过，没 a 找 o e，i u 并列标在后。',
+    say: '有 啊 不放过，没 啊 找 喔、鹅，衣 乌 并列标在后。',
+    audio: 'audio/rule/lesson-10.mp3',
     demo: { parts: ['b', 'āi'], result: 'bái', hanzi: '白' },
   },
   words: [
@@ -354,6 +370,8 @@ registerLesson({
   rule: {
     id: 'rule-iu', title: 'iu 标在 u',
     text: 'i u 并列标在后 —— iu 的帽子戴在 u 头上：liù。',
+    say: '衣 乌 并列标在后。优 的帽子戴在 乌 头上：六。',
+    audio: 'audio/rule/lesson-11.mp3',
     demo: { parts: ['l', 'iù'], result: 'liù', hanzi: '六' },
   },
   words: [
@@ -384,6 +402,8 @@ registerLesson({
   rule: {
     id: 'rule-er', title: 'er 不与声母相拼',
     text: 'er 是个独行侠，从来不和声母做朋友，永远自己站着：ér、ěr、èr。',
+    say: '儿 是个独行侠，从来不和声母做朋友，永远自己站着：儿、耳、二。',
+    audio: 'audio/rule/lesson-12.mp3',
     demo: { parts: ['er'], result: 'ěr', hanzi: '耳' },
   },
   words: [
@@ -414,6 +434,8 @@ registerLesson({
   rule: {
     id: 'rule-qianbi', title: '前鼻韵母',
     text: '前鼻韵母 n 收尾，舌尖顶住上牙床：an en in un ün。',
+    say: '前鼻韵母 讷 收尾，舌尖顶住上牙床：安、恩、因、温、晕。',
+    audio: 'audio/rule/lesson-13.mp3',
     demo: { parts: ['t', 'iān'], result: 'tiān', hanzi: '天' },
   },
   words: [
@@ -446,6 +468,8 @@ registerLesson({
   rule: {
     id: 'rule-houbi', title: '后鼻韵母',
     text: '后鼻韵母 ng 收尾，舌根抬起来：ang eng ing ong。和前鼻音比一比：an—ang。',
+    say: '后鼻韵母收尾时舌根抬起来：昂、鞥、英、轰。和前鼻音比一比：安，昂。',
+    audio: 'audio/rule/lesson-14.mp3',
     demo: { parts: ['y', 'áng'], result: 'yáng', hanzi: '羊' },
   },
   words: [

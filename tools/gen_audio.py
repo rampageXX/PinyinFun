@@ -90,14 +90,23 @@ def parse_js_objects(path: Path):
     src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)     # strip block comments
     src = re.sub(r"//[^\n]*", "", src)                   # strip line comments
     records = []
-    for block in re.findall(r"\{[^{}]*\}", src):
-        rec = dict(re.findall(r"(\w+)\s*:\s*'([^']*)'", block))
-        flags = dict(re.findall(r"(\w+)\s*:\s*(true|false)", block))
-        rec.update({k: v == "true" for k, v in flags.items()})
-        nums = dict(re.findall(r"(\w+)\s*:\s*(\d+)", block))
-        rec.update({k: int(v) for k, v in nums.items()})
-        if rec:
-            records.append(rec)
+    # Innermost-first, then peel that layer off and go again. A lesson's rule
+    # holds a nested `demo: {...}`, so matching only innermost braces missed
+    # the rule itself — and with it every 口诀 recording.
+    work = src
+    for _ in range(6):
+        blocks = re.findall(r"\{[^{}]*\}", work)
+        if not blocks:
+            break
+        for block in blocks:
+            rec = dict(re.findall(r"(\w+)\s*:\s*'([^']*)'", block))
+            flags = dict(re.findall(r"(\w+)\s*:\s*(true|false)", block))
+            rec.update({k: v == "true" for k, v in flags.items()})
+            nums = dict(re.findall(r"(\w+)\s*:\s*(\d+)", block))
+            rec.update({k: int(v) for k, v in nums.items()})
+            if rec:
+                records.append(rec)
+        work = re.sub(r"\{[^{}]*\}", "", work)
     return records
 
 
@@ -138,7 +147,12 @@ def build_manifest() -> dict:
                 # "ééé". The page still shows 鹅鹅鹅; only the voice hears
                 # 鹅，鹅，鹅. Real reduplicated words (爸爸, 妈妈) have no `say`
                 # and stay a single word, which is correct for them.
-                text = rec.get("say") or rec.get("hanzi") or rec.get("word")
+                # `text` picks up the 口诀 on each lesson's rule card. Those
+                # are printed with real letters — 「有 a 不放过」 — and a zh-CN
+                # voice reads a bare "a" as the English letter, so the rules
+                # that contain letters carry a `say` in 呼读音 characters.
+                text = (rec.get("say") or rec.get("hanzi")
+                        or rec.get("word") or rec.get("text"))
                 if audio and text:
                     manifest[audio] = text
 

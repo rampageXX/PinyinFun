@@ -214,7 +214,27 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
-# ── 故事 ─────────────────────────────────────────────────────────────
+# ── 口诀 ────────────────────────────────────────────────────
+#
+# The 口诀 on each rule card is the one thing a child cannot decode for
+# herself: it is written for a reader. It has to be sayable, and where it
+# prints letters it needs a `say` in 呼读音 characters, because a zh-CN voice
+# reads a bare "a" as the English letter name.
+
+for body in re.findall(r"rule: \{(.*?)\n  \},", lessons_src, re.S):
+    m_t = re.search(r"text: '([^']*)'", body)
+    m_i = re.search(r"id: '([^']*)'", body)
+    if not m_t:
+        continue
+    rid = m_i.group(1) if m_i else "?"
+    if "audio:" not in body:
+        fail(f"rule {rid} has no audio — the child cannot read it")
+    letters = re.findall(r"(?<![一-鿿])[a-zü]+", m_t.group(1))
+    if letters and "say:" not in body:
+        fail(f"rule {rid} prints letters {letters[:4]} but has no `say` — "
+             f"the voice would read them as English letter names")
+
+# ── 故事 ─# ── 故事 ─────────────────────────────────────────────────────────────
 
 story_ids = re.findall(r"id: '(story-[^']+)'", stories_src)
 if len(story_ids) != len(set(story_ids)):

@@ -332,9 +332,32 @@ function buildRuleCard(rule) {
   label.style.color = 'var(--sea-deep)';
   label.textContent = '记住这个规则 · ' + rule.title;
 
-  const text = document.createElement('div');
-  text.style.cssText = 'font-size:1.02rem; line-height:1.8; font-weight:600; color:var(--ink);';
-  text.textContent = rule.text;
+  // The 口诀 reads aloud on tap. It is the one thing on this card she cannot
+  // decode for herself — it is written for a reader, and she is not one yet.
+  const text = document.createElement('button');
+  text.style.cssText =
+    'display:flex; align-items:flex-start; gap:10px; width:100%; text-align:left;' +
+    'border:none; background:none; padding:0; cursor:pointer;' +
+    'font-size:1.02rem; line-height:1.8; font-weight:600; color:var(--ink);';
+
+  const speaker = document.createElement('span');
+  speaker.textContent = '🔊';
+  speaker.style.cssText = 'font-size:1.2rem; flex:none; margin-top:2px;';
+
+  const words = document.createElement('span');
+  words.textContent = rule.text;
+  text.append(speaker, words);
+
+  if (rule.audio) {
+    text.setAttribute('aria-label', '读一读：' + rule.title);
+    text.addEventListener('click', () => {
+      text.classList.add('animate-pop');
+      setTimeout(() => text.classList.remove('animate-pop'), 340);
+      playAudio(rule.audio);
+    });
+  } else {
+    speaker.style.opacity = '0.25';
+  }
 
   card.append(label, text);
 

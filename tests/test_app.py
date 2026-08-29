@@ -337,6 +337,71 @@ def test_replaying_a_cleared_lesson_does_not_drag_her_back(page):
     assert after["unlocked"] == [1, 2]
 
 
+def test_untested_letters_are_drawn_first(page):
+    """Ordering, not just inclusion — otherwise a big lesson can never clear.
+
+    The draw is seeded by date, so a second sitting on the same day would ask
+    the identical letters. Putting the never-asked ones at the front is what
+    lets the remaining letters be reached at all.
+    """
+    page.click("#start-screen .btn-primary")
+    ok = page.evaluate("""() => {
+        const lesson = getLessonById('lesson-08');       // teaches 8 letters
+        const strengths = {};
+        lesson.sounds.slice(0, 3).forEach(id => { strengths[id] = { attempts: 2, strength: 80 }; });
+        localStorage.setItem('pinyin_strengths', JSON.stringify(strengths));
+        const pool = pickTodaysItems(getTodayString(), lesson).sounds.map(s => s.id);
+        const own = pool.filter(id => lesson.sounds.indexOf(id) !== -1);
+        const fresh = lesson.sounds.slice(3);
+        // every never-asked letter must come before every already-asked one
+        return fresh.every(id => own.indexOf(id) < Math.min(
+            ...lesson.sounds.slice(0, 3).map(seen => own.indexOf(seen))));
+    }""")
+    assert ok, "letters she has never been asked must be drawn first"
+
+
+def test_a_big_lesson_takes_more_than_one_sitting(page):
+    """课8 teaches 8 letters; clearing waits until every one has been asked."""
+    page.click("#start-screen .btn-primary")
+    page.evaluate("""() => {
+        const st = getLessonState();
+        st.clearedOn = {};
+        st.masteredLessons = [];
+        LESSONS.filter(l => l.order < 8).forEach(l => {
+            st.clearedOn[l.id] = getTodayString();
+            st.masteredLessons.push(l.id);
+        });
+        st.currentLessonId = 'lesson-08';
+        saveLessonState(st);
+    }""")
+
+    assert run_scripted_mission(page, wrong_answers=0)
+    first = page.evaluate(r"""() => ({
+        cleared: !!(getLessonState().clearedOn || {})['lesson-08'],
+        untested: untestedSounds(getLessonById('lesson-08'), getStrengths()).length,
+        msg: document.getElementById('result-unlock').innerText.replace(/\s+/g, ' ').trim(),
+    })""")
+    assert not first["cleared"], "one mission cannot ask all eight letters"
+    assert first["untested"] > 0
+    assert "没练到" in first["msg"], f"she should be told what is left: {first['msg']}"
+
+    # Further sittings must reach the remaining letters and finish the lesson.
+    for _ in range(3):
+        if page.evaluate("() => !!(getLessonState().clearedOn || {})['lesson-08']"):
+            break
+        page.evaluate("() => navTo('home-screen')")
+        assert run_scripted_mission(page, wrong_answers=0)
+
+    after = page.evaluate("""() => ({
+        cleared: !!(getLessonState().clearedOn || {})['lesson-08'],
+        untested: untestedSounds(getLessonById('lesson-08'), getStrengths()).length,
+        current: getLessonState().currentLessonId,
+    })""")
+    assert after["untested"] == 0, "repeat sittings must reach every letter"
+    assert after["cleared"], "课8 should clear once all eight have been asked"
+    assert after["current"] == "lesson-09"
+
+
 # ── audio ────────────────────────────────────────────────────────────
 
 def test_audio_does_not_leak_between_lessons(page):

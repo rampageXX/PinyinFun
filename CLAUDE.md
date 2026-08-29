@@ -139,10 +139,19 @@ tests/test_app.py   # Playwright smoke test
 - **Daily selection**: seeded by the date string so a reload mid-session resumes the
   same 10 items. 60% current lesson, 40% weakness-weighted review of earlier lessons.
 - **Progression**: it works like a game — a mission at ≥`CLEAR_RATIO` (9/10)
-  *clears* the current lesson, awards its sticker and opens the next one
-  immediately. No calendar anywhere: she can clear several in one sitting.
-  Order is still the textbook's, so no letter appears out of sequence.
-  Replaying a cleared lesson is always allowed and never moves her backwards.
+  *and* every letter the lesson teaches asked at least once *clears* it, awards
+  its sticker and opens the next lesson immediately. No calendar anywhere.
+  From 课3 on, six of the ten slots go to blending and tone drills, so lessons
+  teaching more than four letters (课7 8 9 12 13 14) take two sittings — the
+  result screen names the letters still waiting.
+- **Coverage ordering**: `pickTodaysItems` puts never-asked letters at the
+  front. This is load-bearing, not a nicety: the draw is seeded by date, so
+  without it a second sitting on the same day repeats the identical letters and
+  a big lesson can never be cleared at all.
+- Replaying a cleared lesson is always allowed and never moves her backwards.
+- **The map bar** is average sound *strength* (50 start, +15 / −20, −5 a day,
+  never-asked counts 0) — a knowledge meter, not the mission score. One perfect
+  session caps around 80%.
 
 ## Audio
 

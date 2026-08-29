@@ -530,12 +530,23 @@ function showResult(result) {
     unlockEl.classList.remove('hidden');
     const t = document.createElement('div');
     t.style.cssText = 'font-weight:700; margin-bottom:4px;';
-    t.textContent = '再来一次就更棒了 💪';
     const n = document.createElement('div');
     n.style.cssText = 'font-size:0.88rem; color:var(--ink-mid);';
-    const need = Math.ceil(result.total * CLEAR_RATIO);
-    n.textContent = '答对 ' + need + ' 题，就能打开第 ' +
-      ((progress.next && progress.next.order) || progress.lesson.order) + ' 课';
+
+    const waiting = (progress.untested || [])
+      .map(id => (getSound(id) || {}).text).filter(Boolean);
+
+    if (progress.scored && waiting.length) {
+      // She answered well enough; the lesson simply has more letters than one
+      // mission can ask. Name them, so the next round has an obvious point.
+      t.textContent = '答得真好！⭐';
+      n.textContent = '还有 ' + waiting.join(' ') + ' 没练到，再来一次就过关';
+    } else {
+      t.textContent = '再来一次就更棒了 💪';
+      const need = Math.ceil(result.total * CLEAR_RATIO);
+      n.textContent = '答对 ' + need + ' 题，就能打开第 ' +
+        ((progress.next && progress.next.order) || progress.lesson.order) + ' 课';
+    }
     unlockEl.append(t, n);
   } else {
     unlockEl.classList.add('hidden');

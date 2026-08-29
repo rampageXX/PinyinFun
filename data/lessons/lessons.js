@@ -25,6 +25,8 @@ registerLesson({
   id: 'lesson-01', order: 1, unit: 2, island: '🏖',
   title: 'a o e', subtitle: '三个单韵母',
   intro: '第一课。三个韵母，四个声调。张大嘴巴 a，公鸡打鸣 o，白鹅唱歌 e。',
+  introVoice: { say: '第一课。三个韵母，四个声调。张大嘴巴 啊，公鸡打鸣 喔，白鹅唱歌 鹅。',
+    audio: 'audio/intro/lesson-01.mp3' },
   sounds: ['yu-a', 'yu-o', 'yu-e'],
   rule: {
     id: 'rule-tones', title: '四声',
@@ -58,6 +60,8 @@ registerLesson({
   id: 'lesson-02', order: 2, unit: 2, island: '🐚',
   title: 'i u ü', subtitle: '还有三个单韵母',
   intro: '六个单韵母到齐了。注意 i 戴帽子的时候要把点去掉：ī。',
+  introVoice: { say: '六个单韵母到齐了。注意 衣 戴帽子的时候要把点去掉。',
+    audio: 'audio/intro/lesson-02.mp3' },
   sounds: ['yu-i', 'yu-u', 'yu-v'],
   rule: {
     id: 'rule-i-dot', title: 'i 标调去点',
@@ -94,6 +98,8 @@ registerLesson({
   id: 'lesson-03', order: 3, unit: 2, island: '🌴',
   title: 'b p m f', subtitle: '第一批声母',
   intro: '声母来了。声母不能单独念，要和韵母拼在一起：b 和 ā 一碰，就是 bā。',
+  introVoice: { say: '声母来了。声母不能单独念，要和韵母拼在一起：玻 和 啊 一碰，就是 八。',
+    audio: 'audio/intro/lesson-03.mp3' },
   sounds: ['sh-b', 'sh-p', 'sh-m', 'sh-f'],
   rule: {
     id: 'rule-liangpin', title: '两拼音节',
@@ -127,6 +133,8 @@ registerLesson({
   id: 'lesson-04', order: 4, unit: 2, island: '⛵',
   title: 'd t n l', subtitle: '再来四个声母',
   intro: 'n 和 l 遇到 ü 的时候，两点要留着：nü、lü。',
+  introVoice: { say: '讷 和 勒 遇到 迂 的时候，两点要留着：女、绿。',
+    audio: 'audio/intro/lesson-04.mp3' },
   sounds: ['sh-d', 'sh-t', 'sh-n', 'sh-l'],
   rule: {
     id: 'rule-nl-v', title: 'n l 与 ü',
@@ -164,6 +172,8 @@ registerLesson({
   id: 'lesson-05', order: 5, unit: 3, island: '🏝',
   title: 'g k h', subtitle: '三拼音节来了',
   intro: '有的音节有三个部分：g—u—ā，中间的 u 叫介母。',
+  introVoice: { say: '有的音节有三个部分：哥，乌，啊。中间的 乌 叫介母。',
+    audio: 'audio/intro/lesson-05.mp3' },
   sounds: ['sh-g', 'sh-k', 'sh-h'],
   rule: {
     id: 'rule-sanpin', title: '三拼音节',
@@ -196,6 +206,8 @@ registerLesson({
   id: 'lesson-06', order: 6, unit: 3, island: '🌊',
   title: 'j q x', subtitle: '小 ü 要脱帽',
   intro: '这一课最重要的规则：j q x 和小 ü 在一起，ü 上的两点要去掉。',
+  introVoice: { say: '这一课最重要的规则：基、欺、希 和小 迂 在一起，迂 上的两点要去掉。',
+    audio: 'audio/intro/lesson-06.mp3' },
   sounds: ['sh-j', 'sh-q', 'sh-x'],
   rule: {
     id: 'rule-jqx-v', title: 'j q x 见 ü 去两点',
@@ -231,6 +243,8 @@ registerLesson({
   id: 'lesson-07', order: 7, unit: 3, island: '🐠',
   title: 'z c s', subtitle: '平舌音',
   intro: '舌尖平平地抵住牙齿，这叫平舌音。zi ci si 是整体认读音节，不用拼，直接读。',
+  introVoice: { say: '舌尖平平地抵住牙齿，这叫平舌音。资、雌、思 是整体认读音节，不用拼，直接读。',
+    audio: 'audio/intro/lesson-07.mp3' },
   sounds: ['sh-z', 'sh-c', 'sh-s', 'zt-zi', 'zt-ci', 'zt-si'],
   rule: {
     id: 'rule-zhengti', title: '整体认读音节',
@@ -263,6 +277,8 @@ registerLesson({
   id: 'lesson-08', order: 8, unit: 3, island: '🦀',
   title: 'zh ch sh r', subtitle: '翘舌音',
   intro: '舌尖翘起来碰上颚，这叫翘舌音。和上一课的 z c s 比一比，别念混了。',
+  introVoice: { say: '舌尖翘起来碰上颚，这叫翘舌音。和上一课的 资、雌、思 比一比，别念混了。',
+    audio: 'audio/intro/lesson-08.mp3' },
   sounds: ['sh-zh', 'sh-ch', 'sh-sh', 'sh-r', 'zt-zhi', 'zt-chi', 'zt-shi', 'zt-ri'],
   rule: {
     id: 'rule-pingqiao', title: '平舌音和翘舌音',
@@ -298,6 +314,8 @@ registerLesson({
   id: 'lesson-09', order: 9, unit: 3, island: '🐙',
   title: 'y w', subtitle: '两个好帮手',
   intro: 'y 和 w 帮韵母站在最前面。y 遇到 ü，ü 也要脱帽：yu。',
+  introVoice: { say: '衣 和 乌 帮韵母站在最前面。衣 遇到 迂，迂 也要脱帽。',
+    audio: 'audio/intro/lesson-09.mp3' },
   sounds: ['sh-y', 'sh-w', 'zt-yi', 'zt-wu', 'zt-yu'],
   rule: {
     id: 'rule-y-v', title: 'y 见 ü 也去两点',
@@ -332,6 +350,8 @@ registerLesson({
   id: 'lesson-10', order: 10, unit: 4, island: '🌋',
   title: 'ai ei ui', subtitle: '复韵母',
   intro: '两个韵母手拉手，就是复韵母。这一课还要学会声调标在哪儿。',
+  introVoice: { say: '两个韵母手拉手，就是复韵母。这一课还要学会声调标在哪儿。',
+    audio: 'audio/intro/lesson-10.mp3' },
   sounds: ['yu-ai', 'yu-ei', 'yu-ui'],
   rule: {
     id: 'rule-biaodiao', title: '标调规则',
@@ -366,6 +386,8 @@ registerLesson({
   id: 'lesson-11', order: 11, unit: 4, island: '🏄',
   title: 'ao ou iu', subtitle: '还是复韵母',
   intro: 'iu 的声调标在 u 上面：iū iú iǔ iù。别标错地方。',
+  introVoice: { say: '优 的声调标在 乌 上面。别标错地方。',
+    audio: 'audio/intro/lesson-11.mp3' },
   sounds: ['yu-ao', 'yu-ou', 'yu-iu'],
   rule: {
     id: 'rule-iu', title: 'iu 标在 u',
@@ -398,6 +420,8 @@ registerLesson({
   id: 'lesson-12', order: 12, unit: 4, island: '🌺',
   title: 'ie üe er', subtitle: '还有一个特别的 er',
   intro: 'er 很特别，它不和任何声母相拼，总是自己单独用。',
+  introVoice: { say: '儿 很特别，它不和任何声母相拼，总是自己单独用。',
+    audio: 'audio/intro/lesson-12.mp3' },
   sounds: ['yu-ie', 'yu-ve', 'yu-er', 'zt-ye', 'zt-yue'],
   rule: {
     id: 'rule-er', title: 'er 不与声母相拼',
@@ -430,6 +454,8 @@ registerLesson({
   id: 'lesson-13', order: 13, unit: 4, island: '🐢',
   title: 'an en in un ün', subtitle: '前鼻韵母',
   intro: '前鼻韵母的尾巴是 n，舌尖要抵住上牙床。',
+  introVoice: { say: '前鼻韵母的尾巴是 讷，舌尖要抵住上牙床。',
+    audio: 'audio/intro/lesson-13.mp3' },
   sounds: ['yu-an', 'yu-en', 'yu-in', 'yu-un', 'yu-vn', 'zt-yuan', 'zt-yin', 'zt-yun'],
   rule: {
     id: 'rule-qianbi', title: '前鼻韵母',
@@ -464,6 +490,8 @@ registerLesson({
   id: 'lesson-14', order: 14, unit: 4, island: '🏔',
   title: 'ang eng ing ong', subtitle: '后鼻韵母',
   intro: '最后一课。后鼻韵母的尾巴是 ng，舌根要抬起来。学完这一课，拼音就全学会了。',
+  introVoice: { say: '最后一课。后鼻韵母的尾巴是后鼻音，舌根要抬起来。学完这一课，拼音就全学会了。',
+    audio: 'audio/intro/lesson-14.mp3' },
   sounds: ['yu-ang', 'yu-eng', 'yu-ing', 'yu-ong', 'zt-ying'],
   rule: {
     id: 'rule-houbi', title: '后鼻韵母',

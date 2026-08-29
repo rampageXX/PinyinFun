@@ -268,8 +268,8 @@ if len(story_ids) != len(set(story_ids)):
 
 lesson_ids = {l["id"] for l in lessons}
 for sid, unlock in re.findall(r"id: '(story-[^']+)', order: \d+, tier: \d+, "
-                              r"unlockAfter: '([^']+)'", stories_src):
-    if unlock not in lesson_ids:
+                              r"unlockAfter: (?:'([^']+)'|null)", stories_src):
+    if unlock and unlock not in lesson_ids:
         fail(f"{sid} unlocks after unknown lesson {unlock}")
 
 story_orders = sorted(int(o) for o in re.findall(r"order: (\d+), tier:", stories_src))

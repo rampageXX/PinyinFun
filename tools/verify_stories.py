@@ -64,7 +64,8 @@ def readable_bases(order):
 def main():
     src = read("stories.js")
     blocks = re.findall(
-        r"id: '(story-[^']+)', order: (\d+), tier: (\d+), unlockAfter: 'lesson-(\d+)'"
+        r"id: '(story-[^']+)', order: (\d+), tier: (\d+), "
+        r"unlockAfter: (?:'lesson-(\d+)'|null)"
         r"(.*?)(?=\n  \{|\n\];)", src, re.S)
     if not blocks:
         print("no stories parsed", file=sys.stderr)
@@ -72,7 +73,9 @@ def main():
 
     rows, problems = [], []
     for sid, order, tier, unlock, body in blocks:
-        order, unlock = int(order), int(unlock)
+        # A free story has no unlock lesson; measure it at 课1, which is where
+        # she actually meets it.
+        order, unlock = int(order), int(unlock or 1)
         # only what is inside `lines: [...]` — the title has the same shape
         block = re.search(r"lines: \[(.*?)\],", body, re.S)
         lines = re.findall(r"\{ hanzi: '([^']+)', pinyin: '([^']*)', audio:",

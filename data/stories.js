@@ -17,7 +17,7 @@
 
 const STORIES = [
   {
-    id: 'story-yonge', order: 1, tier: 1, unlockAfter: 'lesson-04',
+    id: 'story-yonge', order: 1, tier: 1, unlockAfter: null,
     title: { hanzi: '咏鹅', pinyin: 'yǒng é', audio: 'audio/story/yonge-title.mp3' },
     source: '骆宾王 · 唐',
     art: 'art/yonge.svg',
@@ -35,7 +35,7 @@ const STORIES = [
     ],
   },
   {
-    id: 'story-minnong', order: 2, tier: 1, unlockAfter: 'lesson-06',
+    id: 'story-minnong', order: 2, tier: 1, unlockAfter: 'lesson-04',
     title: { hanzi: '悯农', pinyin: 'mǐn nóng', audio: 'audio/story/minnong-title.mp3' },
     source: '李绅 · 唐',
     art: 'art/minnong.svg',
@@ -53,7 +53,7 @@ const STORIES = [
     ],
   },
   {
-    id: 'story-chunxiao', order: 3, tier: 1, unlockAfter: 'lesson-08',
+    id: 'story-chunxiao', order: 3, tier: 1, unlockAfter: 'lesson-06',
     title: { hanzi: '春晓', pinyin: 'chūn xiǎo', audio: 'audio/story/chunxiao-title.mp3' },
     source: '孟浩然 · 唐',
     art: 'art/chunxiao.svg',
@@ -71,7 +71,7 @@ const STORIES = [
     ],
   },
   {
-    id: 'story-hua', order: 4, tier: 1, unlockAfter: 'lesson-10',
+    id: 'story-hua', order: 4, tier: 1, unlockAfter: 'lesson-08',
     title: { hanzi: '画', pinyin: 'huà', audio: 'audio/story/hua-title.mp3' },
     source: '王维 · 唐',
     art: 'art/hua.svg',
@@ -89,7 +89,7 @@ const STORIES = [
     ],
   },
   {
-    id: 'story-jingyesi', order: 5, tier: 1, unlockAfter: 'lesson-12',
+    id: 'story-jingyesi', order: 5, tier: 1, unlockAfter: 'lesson-10',
     title: { hanzi: '静夜思', pinyin: 'jìng yè sī', audio: 'audio/story/jingyesi-title.mp3' },
     source: '李白 · 唐',
     art: 'art/jingyesi.svg',

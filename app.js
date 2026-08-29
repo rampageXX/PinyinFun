@@ -306,10 +306,31 @@ function renderLesson() {
   clearEl(root);
 
   // Intro
-  const intro = document.createElement('div');
+  // The first thing on the screen and the longest — and until now the only
+  // thing here she had no way into. It reads aloud like everything else.
+  const intro = document.createElement(lesson.introVoice ? 'button' : 'div');
   intro.className = 'card';
-  intro.style.cssText = 'font-size:0.92rem; line-height:1.8; color:var(--ink-mid);';
-  intro.textContent = lesson.intro;
+  intro.style.cssText =
+    'display:flex; align-items:center; gap:10px; width:100%; text-align:left;' +
+    'font-size:0.92rem; line-height:1.8; color:var(--ink-mid);';
+
+  if (lesson.introVoice && lesson.introVoice.audio) {
+    intro.style.cssText += 'cursor:pointer; min-height:64px;';
+    intro.setAttribute('aria-label', '读一读介绍：' + lesson.intro);
+    const horn = document.createElement('span');
+    horn.textContent = '🔊';
+    horn.style.cssText = 'font-size:1.35rem; flex:none;';
+    const body = document.createElement('span');
+    body.textContent = lesson.intro;
+    intro.append(horn, body);
+    intro.addEventListener('click', () => {
+      intro.classList.add('animate-pop');
+      setTimeout(() => intro.classList.remove('animate-pop'), 340);
+      playAudio(lesson.introVoice.audio);
+    });
+  } else {
+    intro.textContent = lesson.intro;
+  }
   root.appendChild(intro);
 
   // ① 认一认
@@ -388,7 +409,7 @@ function buildRuleCard(rule) {
   text.append(speaker, words);
 
   if (rule.audio) {
-    text.setAttribute('aria-label', '读一读：' + rule.title);
+    text.setAttribute('aria-label', '读一读规则：' + rule.title);
     text.addEventListener('click', () => {
       text.classList.add('animate-pop');
       setTimeout(() => text.classList.remove('animate-pop'), 340);

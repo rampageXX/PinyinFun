@@ -437,7 +437,7 @@ def test_tapping_the_rule_plays_it(page):
             return Promise.resolve();
         };
         const btn = [...document.querySelectorAll('#lesson-content button')]
-            .find(b => (b.getAttribute('aria-label') || '').indexOf('读一读') === 0);
+            .find(b => (b.getAttribute('aria-label') || '').indexOf('读一读规则') === 0);
         if (btn) btn.click();
         await new Promise(r => setTimeout(r, 60));
         HTMLMediaElement.prototype.play = orig;
@@ -502,7 +502,82 @@ def test_the_mnemonic_chants_the_phrase_then_the_letter(page):
     assert result["card"] == ["sheng/b.mp3"],         f"the card should still play just the letter, played {result['card']}"
 
 
-# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
+def test_nothing_on_a_lesson_screen_is_silent(page):
+    """She cannot read. Every block of text has to have a way in.
+
+    The intro is the first thing on the screen and the longest, and was the
+    last thing here with no voice.
+    """
+    state = page.evaluate("""() => {
+        const silent = [], leaky = [];
+        LESSONS.forEach(l => {
+            if (!l.introVoice || !l.introVoice.audio) silent.push(l.id + ':intro');
+            else if (/(?:^|[^一-鿿])[a-zü]/.test(l.introVoice.say)) {
+                leaky.push(l.id + ':intro');
+            }
+            if (l.rule && !l.rule.audio) silent.push(l.id + ':rule');
+        });
+        return { silent, leaky };
+    }""")
+    assert state["silent"] == [], f"still silent: {state['silent']}"
+    assert state["leaky"] == [], f"spoken text still holding letters: {state['leaky']}"
+
+
+def test_tapping_the_intro_reads_it(page):
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate("""async () => {
+        viewingLessonId = 'lesson-01';
+        navTo('lesson-screen');
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').slice(-2).join('/'));
+            return Promise.resolve();
+        };
+        const intro = document.querySelector('#lesson-content .card');
+        const height = Math.round(intro.getBoundingClientRect().height);
+        intro.click();
+        await new Promise(r => setTimeout(r, 60));
+        HTMLMediaElement.prototype.play = orig;
+        return { played, height };
+    }""")
+    assert result["played"] == ["intro/lesson-01.mp3"], result["played"]
+    assert result["height"] >= 64, f"touch target only {result['height']}px"
+
+
+def test_the_first_story_is_open_before_anything_is_cleared(page):
+    """A new tab full of padlocks is a dead room, and she taps the new icon first."""
+    page.click("#start-screen .btn-primary")
+    state = page.evaluate("""() => ({
+        cleared: Object.keys(getLessonState().clearedOn || {}).length,
+        open: storiesWithState().filter(r => r.unlocked).map(r => r.story.id),
+    })""")
+    assert state["cleared"] == 0, "fresh save"
+    assert state["open"] == ["story-yonge"], (
+        f"咏鹅 should be readable from the start, open: {state['open']}")
+
+
+def test_the_new_controls_are_big_enough_to_hit(page):
+    """64px, or she misses and hits the card behind it."""
+    page.click("#start-screen .btn-primary")
+    sizes = page.evaluate("""async () => {
+        viewingLessonId = 'lesson-01';
+        navTo('lesson-screen');
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const h = el => Math.round(el.getBoundingClientRect().height);
+        const rule = [...document.querySelectorAll('#lesson-content button')]
+            .find(b => (b.getAttribute('aria-label') || '').indexOf('读一读规则') === 0);
+        return {
+            mnemonics: [...document.querySelectorAll('#lesson-content .sound-label')].map(h),
+            rule: h(rule),
+        };
+    }""")
+    assert all(x >= 64 for x in sizes["mnemonics"]), sizes["mnemonics"]
+    assert sizes["rule"] >= 64, sizes["rule"]
+
+
+# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
 
 def test_stories_load_with_art_and_audio(page):
     counts = page.evaluate("""() => ({
@@ -522,8 +597,11 @@ def test_stories_load_with_art_and_audio(page):
 def test_a_story_is_locked_until_its_lesson_is_cleared(page):
     """Reading arrives as a reward for finishing a lesson, not before it."""
     page.click("#start-screen .btn-primary")
-    locked = page.evaluate("() => storiesWithState().filter(r => r.unlocked).length")
-    assert locked == 0, "nothing should be open on a fresh save"
+    # 咏鹅 is free — a new tab must not open as a wall of padlocks. Everything
+    # after it is still earned.
+    open_now = page.evaluate(
+        "() => storiesWithState().filter(r => r.unlocked).map(r => r.story.id)")
+    assert open_now == ["story-yonge"], open_now
 
     page.evaluate("""() => {
         const st = getLessonState();
@@ -534,7 +612,7 @@ def test_a_story_is_locked_until_its_lesson_is_cleared(page):
         open: storiesWithState().filter(r => r.unlocked).map(r => r.story.id),
         first: STORIES[0].id,
     })""")
-    assert after["open"] == ["story-yonge"], after["open"]
+    assert after["open"] == ["story-yonge", "story-minnong"], after["open"]
     assert after["first"] == "story-yonge", "咏鹅 opens first — it is the poem she already sings in 课1"
 
 

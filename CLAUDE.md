@@ -248,9 +248,18 @@ unreachable MP3 should not cost the whole offline app. Registration is skipped
 on `file://`, where service workers do not exist and opening `index.html`
 directly is still the dev loop.
 
-## 口诀 and 顺口溜
+## Nothing on a lesson screen is silent
 
-Every rule card and every 顺口溜 reads aloud on tap. The 口诀 is the one thing on a lesson screen
+She cannot read. Every block of text on a lesson screen has a 🔊 and reads on
+tap — the intro, the 顺口溜 on each card, the 口诀, the 儿歌 lines, the words.
+`verify_data.py` fails a lesson whose intro or rule has no audio.
+
+Each speaking control is at least 64px tall. This is not cosmetic: the 顺口溜
+sits inside the sound card, which is itself a button, so a near-miss plays the
+bare letter instead of the chant — it looks like the app ignoring her.
+
+The aria-labels are deliberately distinct — 读一读介绍 / 读一读规则 / 读一读 —
+because three controls whose labels all began 读一读 could not be told apart. The 口诀 is the one thing on a lesson screen
 a child cannot decode for herself — 「前音轻短后音重，两音相连猛一碰。」 is
 written for a reader, and she is not one yet.
 

@@ -155,6 +155,29 @@
   </section>
 
   <!-- ── 家长 ─────────────────────────────────────────────────────── -->
+  <section id="story-list-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <div>
+          <div class="header-title">故事</div>
+          <div class="header-subtitle">读一读，听一听</div>
+        </div>
+        <div class="header-subtitle"><span id="story-read-count">0</span> / <span id="story-total">0</span></div>
+      </div>
+    </div>
+    <div class="screen-content" id="story-list-content"></div>
+  </section>
+
+  <section id="story-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <button class="btn btn-small" onclick="navTo('story-list-screen')">← 故事</button>
+        <div class="header-title" id="story-title">—</div>
+      </div>
+    </div>
+    <div class="screen-content" id="story-content"></div>
+  </section>
+
   <section id="parent-screen" class="screen hidden">
     <div class="screen-header">
       <div class="screen-header-inner">
@@ -194,6 +217,9 @@
     <button class="nav-btn" data-screen="map-screen" onclick="navTo('map-screen', this)">
       <span class="nav-icon">🗺</span><span class="nav-label">王国</span>
     </button>
+    <button class="nav-btn" data-screen="story-list-screen" onclick="navTo('story-list-screen', this)">
+      <span class="nav-icon">📚</span><span class="nav-label">故事</span>
+    </button>
     <button class="nav-btn" data-screen="sticker-screen" onclick="navTo('sticker-screen', this)">
       <span class="nav-icon">📖</span><span class="nav-label">贴纸册</span>
     </button>
@@ -212,6 +238,7 @@
   <script src="data/sounds.js"></script>
   <script src="data/syllables.js"></script>
   <script src="data/stickers.js"></script>
+  <script src="data/stories.js"></script>
   <script src="lib/strength.js"></script>
   <script src="lib/scoring.js"></script>
   <script src="lib/streaks.js"></script>
@@ -220,6 +247,7 @@
   <script src="lib/selection.js"></script>
   <script src="lib/progress.js"></script>
   <script src="lib/stickers.js"></script>
+  <script src="lib/stories.js"></script>
   <script src="games/_ui.js"></script>
   <script src="games/listenPick.js"></script>
   <script src="games/toneTrain.js"></script>

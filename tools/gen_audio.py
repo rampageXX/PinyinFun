@@ -142,6 +142,15 @@ def build_manifest() -> dict:
                 if audio and text:
                     manifest[audio] = text
 
+    # 故事: poem lines, their titles, and the 生词 under each.
+    stories = ROOT / "data" / "stories.js"
+    if stories.exists():
+        for rec in parse_js_objects(stories):
+            audio = rec.get("audio")
+            text = rec.get("say") or rec.get("hanzi") or rec.get("word")
+            if audio and text:
+                manifest[audio] = text
+
     return manifest
 
 

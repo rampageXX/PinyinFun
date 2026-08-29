@@ -30,6 +30,7 @@ SHELL_GLOBS = [
     "index.html", "styles.css", "app.js", "manifest.json",
     "icon-180.png", "icon-512.png",
     "lib/*.js", "games/*.js", "data/*.js", "data/lessons/*.js",
+    "art/*.svg",
 ]
 
 # Speech. Cached best-effort: one unreachable MP3 should not cost the child

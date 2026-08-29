@@ -1,0 +1,15 @@
+<svg width="400" height="240" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="白鹅在绿水上">
+<rect width="400" height="240" rx="18" fill="#4AA8E8"/>
+<circle cx="330" cy="52" r="26" fill="#FFC94A"/>
+<path d="M0 150 Q100 132 200 150 T400 150 V240 H0 Z" fill="#4CC97A"/>
+<path d="M0 168 Q100 152 200 168 T400 168 V240 H0 Z" fill="#3BB268" opacity=".55"/>
+<ellipse cx="196" cy="158" rx="62" ry="34" fill="#fff"/>
+<path d="M180 132 C168 104 186 78 212 78 C232 78 244 92 244 106"
+      stroke="#fff" stroke-width="20" fill="none" stroke-linecap="round"/>
+<circle cx="243" cy="104" r="12" fill="#fff"/>
+<path d="M252 102 L272 108 L252 114 Z" fill="#FF7A6B"/>
+<circle cx="240" cy="100" r="2.6" fill="#234057"/>
+<path d="M176 190 l-8 14 M206 190 l8 14" stroke="#FF7A6B" stroke-width="7" stroke-linecap="round"/>
+<path d="M60 186 q16 -8 32 0 M300 200 q16 -8 32 0" stroke="#fff" stroke-width="4"
+      fill="none" opacity=".6" stroke-linecap="round"/>
+</svg>

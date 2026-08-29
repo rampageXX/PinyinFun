@@ -88,9 +88,11 @@ data/
   sounds.js         # ✅ 63 sounds — the unit of spaced repetition
   syllables.js      # curriculum syllables, per-tone 汉字 + audio
   stickers.js       # 40 sticker definitions
+  stories.js        # 故事 — five Tang poems, graded and unlocked by lesson
   lessons/
     _registry.js    # registerLesson(), getLessonById(), lesson state
     lessons.js      # all 14 lessons — thin, they reference sounds by id
+art/                # drawn story scenes, flat SVG in the island palette
 games/
   _ui.js            # shared game chrome: header, speaker, feedback timing
   listenPick.js     # 听音选一选
@@ -108,6 +110,7 @@ tools/
   gen_audio.py      # audio generation
   gen_syllables.py  # generates data/syllables.js from the curriculum
   verify_data.py    # data integrity checks
+  verify_stories.py # the 故事 difficulty ladder, measured not asserted
   gen_sw.py         # regenerates sw.js — run after gen_audio.py
 tests/test_app.py   # Playwright smoke test
 ```
@@ -195,6 +198,34 @@ A 声母-less syllable must never reach 拼一拼 — there is nothing to blend.
 拼读 (`b … ā … bā`), `preloadLesson(id)`, `speakFallback(text)`.
 iOS blocks audio until a user gesture — the 开始 button plays a silent buffer once
 to unlock playback for the session.
+
+## 故事
+
+A reading section, separate from the lessons because reading is a different act
+from drilling — she follows the ruby and listens, she is not being tested. Five
+Tang poems, every source ancient and out of copyright, the retellings written
+for this app.
+
+A story unlocks when the lesson in `unlockAfter` is cleared, so it arrives as a
+reward for finishing a lesson. Order is **measured, not asserted**:
+
+```bash
+python tools/verify_stories.py
+```
+
+It reports, per story, what share of the syllables are built only from letters
+she has met by that lesson — the honest answer to "can she read this yet" — and
+fails if the sequence steps backwards. That check is why 静夜思 is last despite
+being the most famous: `chuáng shuāng guāng` all need 课14's ang/uang, making it
+the hardest to decode, and putting it early broke the ladder by 19 points.
+
+Reading material may use letters ahead of the lesson — 课1's 儿歌 already does.
+The "never before its lesson" rule governs **game distractors**, not text she
+reads with pinyin above it.
+
+Pictures are flat SVG in `art/`, drawn rather than photographed: a few kilobytes
+each, no licence to track, and they look like the rest of the app. Photographs
+would be none of those things.
 
 ## Offline
 

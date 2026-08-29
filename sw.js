@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = '5d929a032b65';
+const VERSION = '7eb3ed9bc48e';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */
@@ -29,6 +29,7 @@ const SHELL = [
   'lib/sfx.js',
   'lib/stickers.js',
   'lib/storage.js',
+  'lib/stories.js',
   'lib/streaks.js',
   'lib/strength.js',
   'games/_ui.js',
@@ -39,12 +40,18 @@ const SHELL = [
   'games/toneTrain.js',
   'data/sounds.js',
   'data/stickers.js',
+  'data/stories.js',
   'data/syllables.js',
   'data/lessons/_registry.js',
   'data/lessons/lessons.js',
+  'art/chunxiao.svg',
+  'art/hua.svg',
+  'art/jingyesi.svg',
+  'art/minnong.svg',
+  'art/yonge.svg',
 ];
 
-/* 728 MP3s. Best-effort — a single failure must not fail the install. */
+/* 759 MP3s. Best-effort — a single failure must not fail the install. */
 const AUDIO = [
   'audio/chant/l01-1.mp3',
   'audio/chant/l01-2.mp3',
@@ -108,6 +115,31 @@ const AUDIO = [
   'audio/sheng/y.mp3',
   'audio/sheng/z.mp3',
   'audio/sheng/zh.mp3',
+  'audio/story/chunxiao-1.mp3',
+  'audio/story/chunxiao-2.mp3',
+  'audio/story/chunxiao-3.mp3',
+  'audio/story/chunxiao-4.mp3',
+  'audio/story/chunxiao-title.mp3',
+  'audio/story/hua-1.mp3',
+  'audio/story/hua-2.mp3',
+  'audio/story/hua-3.mp3',
+  'audio/story/hua-4.mp3',
+  'audio/story/hua-title.mp3',
+  'audio/story/jingyesi-1.mp3',
+  'audio/story/jingyesi-2.mp3',
+  'audio/story/jingyesi-3.mp3',
+  'audio/story/jingyesi-4.mp3',
+  'audio/story/jingyesi-title.mp3',
+  'audio/story/minnong-1.mp3',
+  'audio/story/minnong-2.mp3',
+  'audio/story/minnong-3.mp3',
+  'audio/story/minnong-4.mp3',
+  'audio/story/minnong-title.mp3',
+  'audio/story/yonge-1.mp3',
+  'audio/story/yonge-2.mp3',
+  'audio/story/yonge-3.mp3',
+  'audio/story/yonge-4.mp3',
+  'audio/story/yonge-title.mp3',
   'audio/syl/ba1.mp3',
   'audio/syl/ba3.mp3',
   'audio/syl/ba4.mp3',
@@ -621,6 +653,7 @@ const AUDIO = [
   'audio/word/二.mp3',
   'audio/word/五.mp3',
   'audio/word/伞.mp3',
+  'audio/word/光.mp3',
   'audio/word/兔子.mp3',
   'audio/word/公鸡.mp3',
   'audio/word/六.mp3',
@@ -639,6 +672,7 @@ const AUDIO = [
   'audio/word/大钟.mp3',
   'audio/word/天安门.mp3',
   'audio/word/太阳.mp3',
+  'audio/word/头.mp3',
   'audio/word/女.mp3',
   'audio/word/妈妈.mp3',
   'audio/word/妹妹.mp3',
@@ -669,6 +703,7 @@ const AUDIO = [
   'audio/word/梨.mp3',
   'audio/word/棉袄.mp3',
   'audio/word/椅子.mp3',
+  'audio/word/歌.mp3',
   'audio/word/气球.mp3',
   'audio/word/水.mp3',
   'audio/word/汽车.mp3',
@@ -691,6 +726,7 @@ const AUDIO = [
   'audio/word/眼睛.mp3',
   'audio/word/碗.mp3',
   'audio/word/笔.mp3',
+  'audio/word/米饭.mp3',
   'audio/word/糖.mp3',
   'audio/word/紫色.mp3',
   'audio/word/红色.mp3',
@@ -703,6 +739,7 @@ const AUDIO = [
   'audio/word/脚.mp3',
   'audio/word/腿.mp3',
   'audio/word/船.mp3',
+  'audio/word/花.mp3',
   'audio/word/苹果.mp3',
   'audio/word/草.mp3',
   'audio/word/莲藕.mp3',
@@ -717,6 +754,7 @@ const AUDIO = [
   'audio/word/谢谢.mp3',
   'audio/word/豆子.mp3',
   'audio/word/走.mp3',
+  'audio/word/辛苦.mp3',
   'audio/word/金鱼.mp3',
   'audio/word/门.mp3',
   'audio/word/阿姨.mp3',

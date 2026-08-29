@@ -1,0 +1,21 @@
+<svg width="400" height="240" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="农民在田里">
+<rect width="400" height="240" rx="18" fill="#CDE9FF"/>
+<circle cx="330" cy="46" r="30" fill="#FFC94A"/>
+<g stroke="#FFC94A" stroke-width="5" stroke-linecap="round">
+<path d="M330 2 V-6 M286 46 H276 M298 14 l-7 -7 M362 14 l7 -7"/>
+</g>
+<path d="M0 150 H400 V240 H0 Z" fill="#9FD08A"/>
+<g stroke="#4CC97A" stroke-width="5" stroke-linecap="round">
+<path d="M40 214 V182 M40 190 l-10 -10 M40 190 l10 -10"/>
+<path d="M100 220 V188 M100 196 l-10 -10 M100 196 l10 -10"/>
+<path d="M300 214 V182 M300 190 l-10 -10 M300 190 l10 -10"/>
+<path d="M360 222 V190 M360 198 l-10 -10 M360 198 l10 -10"/>
+</g>
+<g>
+<path d="M186 138 q26 -6 40 14" stroke="#234057" stroke-width="14" fill="none" stroke-linecap="round"/>
+<path d="M226 152 V186" stroke="#234057" stroke-width="11" stroke-linecap="round"/>
+<path d="M188 140 L170 168" stroke="#234057" stroke-width="9" stroke-linecap="round"/>
+<ellipse cx="180" cy="126" rx="30" ry="11" fill="#FFC94A"/>
+</g>
+<g fill="#4AA8E8"><circle cx="162" cy="150" r="3.4"/><circle cx="154" cy="164" r="2.8"/></g>
+</svg>

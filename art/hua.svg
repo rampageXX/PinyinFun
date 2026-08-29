@@ -1,0 +1,13 @@
+<svg width="400" height="240" viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="一幅画">
+<rect width="400" height="240" rx="18" fill="#FFF3DC"/>
+<rect x="42" y="26" width="316" height="188" rx="10" fill="#FFFDF6"
+      stroke="#C9A227" stroke-width="7"/>
+<path d="M70 168 L136 84 L188 168 Z" fill="#8FB9C9"/>
+<path d="M150 168 L214 100 L268 168 Z" fill="#4AA8E8" opacity=".8"/>
+<circle cx="288" cy="72" r="18" fill="#FFC94A"/>
+<path d="M62 176 q40 -12 78 0 t78 0 t78 0" stroke="#4AA8E8" stroke-width="5" fill="none"/>
+<path d="M62 190 q40 -12 78 0 t78 0 t78 0" stroke="#4AA8E8" stroke-width="4" fill="none" opacity=".6"/>
+<circle cx="104" cy="196" r="8" fill="#FF7A6B"/>
+<path d="M104 204 V210" stroke="#4CC97A" stroke-width="4" stroke-linecap="round"/>
+<path d="M244 62 q10 -10 20 0 q10 -10 20 0" stroke="#234057" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>

@@ -100,6 +100,7 @@ for block in re.findall(r"\{[^{}]*\}", sounds_src):
 # ── lessons ──────────────────────────────────────────────────────────
 
 lessons_src = read("lessons/lessons.js")
+stories_src = read("stories.js")
 lesson_blocks = re.split(r"registerLesson\(", lessons_src)[1:]
 
 lessons = []
@@ -143,7 +144,8 @@ if unclaimed:
 
 # ── ruby pairings ────────────────────────────────────────────────────
 
-pairs = re.findall(r"hanzi: ?'([^']+)', pinyin: ?'([^']*)'", lessons_src)
+pairs = re.findall(r"hanzi: ?'([^']+)', pinyin: ?'([^']*)'",
+                   lessons_src + stories_src)
 for hanzi, pinyin in pairs:
     n_cjk = len(CJK.findall(hanzi))
     n_syl = len([p for p in pinyin.split() if p])
@@ -192,7 +194,7 @@ for sid, sm, jm, ym, base, lesson in syl_entries:
 # ── audio ────────────────────────────────────────────────────────────
 
 audio_refs = set()
-for src in (sounds_src, lessons_src, syl_src):
+for src in (sounds_src, lessons_src, syl_src, stories_src):
     audio_refs.update(re.findall(r"audio:'(audio/[^']+)'", src))
     audio_refs.update(re.findall(r"audio: ?'(audio/[^']+)'", src))
 
@@ -211,6 +213,26 @@ for ref in sorted(needs_recording):
     if not (ROOT / "audio" / "overrides" / ref).exists():
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
+
+# ── 故事 ─────────────────────────────────────────────────────────────
+
+story_ids = re.findall(r"id: '(story-[^']+)'", stories_src)
+if len(story_ids) != len(set(story_ids)):
+    fail(f"duplicate story ids: {story_ids}")
+
+lesson_ids = {l["id"] for l in lessons}
+for sid, unlock in re.findall(r"id: '(story-[^']+)', order: \d+, tier: \d+, "
+                              r"unlockAfter: '([^']+)'", stories_src):
+    if unlock not in lesson_ids:
+        fail(f"{sid} unlocks after unknown lesson {unlock}")
+
+story_orders = sorted(int(o) for o in re.findall(r"order: (\d+), tier:", stories_src))
+if story_orders != list(range(1, len(story_orders) + 1)):
+    fail(f"story order values are not 1..{len(story_orders)}: {story_orders}")
+
+for art in re.findall(r"art: '([^']+)'", stories_src):
+    if not (ROOT / art).exists():
+        fail(f"story art missing on disk: {art}")
 
 # ── 儿歌 repeats ─────────────────────────────────────────────────────
 #
@@ -269,6 +291,7 @@ print(f"syllables   {len(syl_entries)}")
 print(f"stickers    {len(stickers)}")
 print(f"audio refs  {len(audio_refs)}")
 print(f"ruby pairs  {len(pairs)}")
+print(f"stories     {len(story_ids)}")
 print(f"offline     {sw_files} files precached by sw.js")
 
 for n in notes:

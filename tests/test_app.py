@@ -402,6 +402,78 @@ def test_a_big_lesson_takes_more_than_one_sitting(page):
     assert after["current"] == "lesson-09"
 
 
+# ── 故事 ───────────────────────────────────────────────────
+
+def test_stories_load_with_art_and_audio(page):
+    counts = page.evaluate("""() => ({
+        stories: STORIES.length,
+        lines: STORIES.reduce((n, s) => n + s.lines.length, 0),
+        withArt: STORIES.filter(s => s.art).length,
+        everyLineHasAudio: STORIES.every(s => s.lines.every(l => !!l.audio)),
+        everyStoryHasWords: STORIES.every(s => s.words && s.words.length >= 3),
+    })""")
+    assert counts["stories"] == 5
+    assert counts["lines"] == 20
+    assert counts["withArt"] == 5
+    assert counts["everyLineHasAudio"]
+    assert counts["everyStoryHasWords"]
+
+
+def test_a_story_is_locked_until_its_lesson_is_cleared(page):
+    """Reading arrives as a reward for finishing a lesson, not before it."""
+    page.click("#start-screen .btn-primary")
+    locked = page.evaluate("() => storiesWithState().filter(r => r.unlocked).length")
+    assert locked == 0, "nothing should be open on a fresh save"
+
+    page.evaluate("""() => {
+        const st = getLessonState();
+        st.clearedOn = { 'lesson-04': getTodayString() };
+        saveLessonState(st);
+    }""")
+    after = page.evaluate("""() => ({
+        open: storiesWithState().filter(r => r.unlocked).map(r => r.story.id),
+        first: STORIES[0].id,
+    })""")
+    assert after["open"] == ["story-yonge"], after["open"]
+    assert after["first"] == "story-yonge", "咏鹅 opens first — it is the poem she already sings in 课1"
+
+
+def test_reading_a_story_to_the_end_marks_it_read(page):
+    page.click("#start-screen .btn-primary")
+    page.evaluate("""() => {
+        const st = getLessonState();
+        st.clearedOn = { 'lesson-04': getTodayString() };
+        saveLessonState(st);
+        viewingStoryId = 'story-yonge';
+        navTo('story-screen');
+    }""")
+
+    lines = page.evaluate("() => document.querySelectorAll('#story-content .story-line').length")
+    assert lines == 4, f"咏鹅 has four lines, rendered {lines}"
+
+    played = page.evaluate("""async () => {
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        const story = getStory('story-yonge');
+        [...document.querySelectorAll('#story-content button')]
+            .find(b => b.textContent.indexOf('全部') !== -1).click();
+        for (const line of story.lines) {
+            await new Promise(r => setTimeout(r, 40));
+            getAudioEl(line.audio).dispatchEvent(new Event('ended'));
+            await new Promise(r => setTimeout(r, 320));
+        }
+        await new Promise(r => setTimeout(r, 200));
+        HTMLMediaElement.prototype.play = orig;
+        return played;
+    }""")
+    assert played == [f"yonge-{i}.mp3" for i in range(1, 5)], played
+    assert page.evaluate("() => isStoryRead('story-yonge')"), "finishing should mark it read"
+
+
 # ── audio ────────────────────────────────────────────────────────────
 
 def test_audio_does_not_leak_between_lessons(page):

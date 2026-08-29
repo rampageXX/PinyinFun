@@ -13,6 +13,8 @@ const RENDERERS = {
   'home-screen':        renderHome,
   'map-screen':         renderMap,
   'lesson-screen':      renderLesson,
+  'story-list-screen':  renderStoryList,
+  'story-screen':       renderStory,
   'sticker-screen':     renderStickers,
   'parent-screen':      renderParent,
   'audio-check-screen': renderAudioCheck,
@@ -553,6 +555,146 @@ function showResult(result) {
   }
 
   showScreen('result-screen');
+}
+
+/* ── 故事 ─────────────────────────────────────────────────────────── */
+
+let viewingStoryId = null;
+
+function renderStoryList() {
+  const root = document.getElementById('story-list-content');
+  clearEl(root);
+
+  const rows = storiesWithState();
+  document.getElementById('story-total').textContent = rows.length;
+  document.getElementById('story-read-count').textContent =
+    rows.filter(r => r.read).length;
+
+  rows.forEach(row => {
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.style.cssText =
+      `display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+       margin-bottom:10px; padding:14px 16px;
+       cursor:${row.unlocked ? 'pointer' : 'default'};
+       opacity:${row.unlocked ? 1 : 0.5};`;
+
+    const icon = document.createElement('div');
+    icon.style.cssText = 'font-size:2rem; width:48px; text-align:center;';
+    icon.textContent = row.unlocked ? (row.read ? '📖' : '📕') : '🔒';
+
+    const mid = document.createElement('div');
+    mid.style.flex = '1';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:700;';
+    if (row.unlocked) title.appendChild(rubyEl(row.story.title.hanzi, row.story.title.pinyin));
+    else title.textContent = '？？';
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:0.8rem; color:var(--ink-light); margin-top:2px;';
+    sub.textContent = row.unlocked
+      ? row.story.source
+      : '学完' + (getLessonById(row.story.unlockAfter) || {}).title + ' 就能读';
+    mid.append(title, sub);
+
+    card.append(icon, mid);
+    if (row.unlocked) {
+      card.addEventListener('click', () => {
+        viewingStoryId = row.story.id;
+        navTo('story-screen');
+      });
+    }
+    root.appendChild(card);
+  });
+}
+
+function renderStory() {
+  const story = getStory(viewingStoryId) || STORIES[0];
+  const root = document.getElementById('story-content');
+  clearEl(root);
+
+  const head = document.getElementById('story-title');
+  clearEl(head);
+  head.appendChild(rubyEl(story.title.hanzi, story.title.pinyin));
+
+  // The picture. Drawn rather than photographed, so it belongs to the app and
+  // costs a few kilobytes instead of a few hundred.
+  const art = document.createElement('img');
+  art.src = story.art;
+  art.alt = story.title.hanzi;
+  art.style.cssText =
+    'display:block; width:100%; max-width:420px; margin:0 auto 4px; border-radius:18px;';
+  art.addEventListener('error', () => art.remove());
+  root.appendChild(art);
+
+  const source = document.createElement('div');
+  source.style.cssText =
+    'text-align:center; font-size:0.8rem; color:var(--ink-light); margin-bottom:16px;';
+  source.textContent = story.source;
+  root.appendChild(source);
+
+  // Lines. Tap one to hear it; ▶ 全部 reads the whole poem, highlighting as
+  // it goes so she can follow along with a finger.
+  const lines = document.createElement('div');
+  lines.className = 'card';
+  lines.style.cssText = 'text-align:center; padding:20px 14px;';
+
+  const rows = story.lines.map(line => {
+    const row = document.createElement('button');
+    row.className = 'story-line';
+    row.style.cssText =
+      `display:block; width:100%; padding:10px 6px; margin:0; border:none;
+       background:transparent; font-size:1.35rem; border-radius:12px; cursor:pointer;`;
+    row.appendChild(rubyEl(line.hanzi, line.pinyin));
+    row.addEventListener('click', () => {
+      highlight(row);
+      playAudio(line.audio, () => highlight(null));
+    });
+    lines.appendChild(row);
+    return row;
+  });
+  root.appendChild(lines);
+
+  function highlight(el) {
+    rows.forEach(r => { r.style.background = 'transparent'; });
+    if (el) el.style.background = 'var(--paper-warm)';
+  }
+
+  const playAll = document.createElement('button');
+  playAll.className = 'btn btn-primary btn-full';
+  playAll.style.marginTop = '14px';
+  playAll.textContent = '▶ 全部读一遍';
+  playAll.addEventListener('click', () => {
+    let i = 0;
+    (function next() {
+      if (i >= story.lines.length) {
+        highlight(null);
+        if (markStoryRead(story.id)) {
+          showToast('读完《' + story.title.hanzi + '》啦！📖', 2600);
+          sfxUnlock();
+        }
+        return;
+      }
+      const idx = i++;
+      highlight(rows[idx]);
+      playAudio(story.lines[idx].audio, () => setTimeout(next, 260));
+    })();
+  });
+  root.appendChild(playAll);
+
+  // 生词 from the poem, same chips as a lesson uses.
+  if (story.words && story.words.length) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.style.marginTop = '22px';
+    label.textContent = '生词';
+    root.appendChild(label);
+
+    const words = document.createElement('div');
+    words.className = 'card';
+    words.style.cssText = 'display:flex; flex-wrap:wrap; gap:10px; justify-content:center;';
+    story.words.forEach(w => words.appendChild(buildWordChip(w)));
+    root.appendChild(words);
+  }
 }
 
 /* ── 贴纸册 ───────────────────────────────────────────────────────── */

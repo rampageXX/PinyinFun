@@ -855,6 +855,20 @@ def test_works_offline_after_one_visit(base_url):
         assert state["audioOk"], "speech has to play with no network"
         assert state["audioType"] == "audio/mpeg"
         assert state["styled"] != "rgba(0, 0, 0, 0)", "stylesheet must be cached too"
+
+        # 家长 must be able to say which copy this device is running. Offline
+        # caching means the device keeps serving what it has, so without this
+        # there is no way to tell whether a fix has landed.
+        version = pg.evaluate(r"""async () => {
+            navTo('parent-screen');
+            await new Promise(r => setTimeout(r, 300));
+            const card = [...document.querySelectorAll('#parent-content .card')]
+                .find(c => c.textContent.indexOf('版本') === 0);
+            return card ? card.innerText.replace(/\s+/g, ' ').trim() : null;
+        }""")
+        assert version and "离线版本" in version, version
+        keys = pg.evaluate("async () => (await caches.keys())[0]")
+        assert keys.replace("pinyin-", "") in version, (version, keys)
         # Without these the test would also pass on Chromium's own HTTP cache,
         # which is evicted at will and would strand the child mid-flight.
         assert state["controlled"], "the reload must be served by the service worker"

@@ -264,8 +264,25 @@
   -->
   <script>
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      // Was the page already being served by a worker when it loaded? If so, a
+      // worker taking over later is an *update*, and the page should pick it
+      // up. On a first visit there is no previous worker and the handover is
+      // just the install finishing — reloading then would be a pointless flash.
+      var hadController = !!navigator.serviceWorker.controller;
+      var reloading = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!hadController || reloading) return;
+        reloading = true;
+        location.reload();
+      });
+
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          // Home-screen apps can sit for days without a navigation, which is
+          // when a browser would normally look. Ask on every open.
+          reg.update();
+        }).catch(function () {
           /* Offline support is a bonus; never let it break the app. */
         });
       });

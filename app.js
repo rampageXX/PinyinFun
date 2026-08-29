@@ -940,10 +940,80 @@ function renderParent() {
     getLocal('sfx') !== false,
     on => { setSfxEnabled(on); if (on) sfxCorrect(); }));
 
+  root.appendChild(buildVersionCard());
+
   root.appendChild(actionCard(
     '数据',
     '所有进度都存在这台设备上，没有账号，也不上传。',
     '清空全部进度', resetAll));
+}
+
+/*
+ * Which copy is this iPad actually running?
+ *
+ * The whole app is cached for offline use, so after a change the device keeps
+ * serving what it already has until the worker swaps it. That is the point of
+ * it, and it also means there is no way to tell by looking whether a fix has
+ * landed. This says so plainly, and gives a button rather than requiring the
+ * home-screen icon to be deleted and re-added.
+ */
+function buildVersionCard() {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginTop = '14px';
+
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.textContent = '版本';
+
+  const line = document.createElement('div');
+  line.style.cssText = 'font-size:0.86rem; color:var(--ink-mid); line-height:1.7;';
+  line.textContent = '正在检查…';
+
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary btn-full';
+  btn.style.cssText += 'margin-top:12px; min-height:64px;';
+  btn.textContent = '检查更新';
+
+  function show(text) { line.textContent = text; }
+
+  if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) {
+    show('这个副本直接从文件打开，没有离线缓存。');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+  } else {
+    caches.keys().then(keys => {
+      const mine = keys.filter(k => k.indexOf('pinyin-') === 0);
+      show(mine.length
+        ? '离线版本 ' + mine[0].replace('pinyin-', '') + '，已经可以断网使用。'
+        : '还没有离线缓存，联网打开一次就会存下来。');
+    }).catch(() => show('无法读取缓存状态。'));
+
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      btn.textContent = '正在检查…';
+      navigator.serviceWorker.getRegistration()
+        .then(reg => reg && reg.update())
+        .then(() => {
+          // A new worker installs, then takes over, and the controllerchange
+          // handler in index.html reloads the page. If nothing arrives within
+          // a few seconds there was nothing new.
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = '检查更新';
+            show('已经是最新的了。');
+          }, 6000);
+        })
+        .catch(() => {
+          btn.disabled = false;
+          btn.textContent = '检查更新';
+          show('检查失败，可能没有联网。');
+        });
+    });
+  }
+
+  card.append(label, line, btn);
+  return card;
 }
 
 function statCard(rows) {

@@ -227,6 +227,22 @@ Pictures are flat SVG in `art/`, drawn rather than photographed: a few kilobytes
 each, no licence to track, and they look like the rest of the app. Photographs
 would be none of those things.
 
+## Updating a device
+
+Offline caching means an iPad keeps serving what it already has, so a fix does
+not arrive just because it was deployed. Three things make that manageable:
+
+- the page reloads itself when a new worker takes over (`controllerchange` in
+  `index.html`), guarded so a first install does not reload pointlessly
+- `reg.update()` runs on every open — a home-screen app can go days without a
+  navigation, which is when a browser would otherwise look
+- 家长 shows the cached version and has a 检查更新 button, so there is a way to
+  see which copy a device is on rather than guessing
+
+GitHub Pages serves `sw.js` with `Cache-Control: max-age=600`, so a deploy can
+take up to ten minutes to be visible to a device, and the precache is ~8 MB —
+leave the app open long enough for it to download before force-quitting.
+
 ## Offline
 
 The app never calls a network by itself — no backend, no accounts, no CDN, no

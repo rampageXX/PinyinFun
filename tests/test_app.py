@@ -150,6 +150,39 @@ def test_syllables_never_precede_their_parts(page):
     assert bad == [], f"syllables taught before their parts: {bad}"
 
 
+def test_todays_items_include_every_letter_the_lesson_teaches(page):
+    """A lesson's own letters must all be in the day's pool.
+
+    They used to be capped at 4 and shuffled in with the review items, so a
+    letter the lesson exists to teach could go unasked — 课2 cleared at 10/10
+    without ü ever appearing, and 课8 teaches 8 letters of which only 4 could
+    even enter the pool.
+    """
+    missing = page.evaluate("""() => {
+        const bad = [];
+        LESSONS.forEach(lesson => {
+            const items = pickTodaysItems('2026-08-29', lesson);
+            const pool = new Set(items.sounds.map(s => s.id));
+            lesson.sounds.forEach(id => {
+                if (!pool.has(id)) bad.push(lesson.id + ' omits ' + id);
+            });
+        });
+        return bad;
+    }""")
+    assert missing == [], f"lesson letters left out of the day's pool: {missing}"
+
+
+def test_a_small_lesson_asks_all_of_its_letters(page):
+    """课1 teaches three letters; one mission must touch all three."""
+    page.click("#start-screen .btn-primary")
+    assert run_scripted_mission(page, wrong_answers=0)
+    untested = page.evaluate("""() => {
+        const s = JSON.parse(localStorage.getItem('pinyin_strengths') || '{}');
+        return getLessonById('lesson-01').sounds.filter(id => !(s[id] && s[id].attempts));
+    }""")
+    assert untested == [], f"课1 letters never asked: {untested}"
+
+
 # ── a full session ───────────────────────────────────────────────────
 
 def run_mission(page):

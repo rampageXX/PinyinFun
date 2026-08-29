@@ -752,6 +752,54 @@ def test_audio_does_not_leak_between_lessons(page):
         f"tapping a in 课1 should play only a, but played {played}")
 
 
+def test_finishing_a_mission_silences_whatever_was_playing(page):
+    """The result screen used to appear over a clip that kept playing.
+
+    stopAudio lived in navTo, but finishing a mission calls showScreen directly,
+    so nothing silenced the last question — audio with nothing on screen to
+    explain it.
+    """
+    page.click("#start-screen .btn-primary")
+    log = page.evaluate("""async () => {
+        const log = [];
+        const play = HTMLMediaElement.prototype.play;
+        const pause = HTMLMediaElement.prototype.pause;
+        HTMLMediaElement.prototype.play = function () {
+            log.push('play ' + (this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        HTMLMediaElement.prototype.pause = function () {
+            log.push('pause ' + (this.src || '').split('/').pop());
+            return pause.call(this);
+        };
+        const tick = ms => new Promise(r => setTimeout(r, ms || 80));
+
+        // a clip is playing when the mission ends
+        playAudio('audio/rule/lesson-01.mp3');
+        await tick();
+        showResult({ score: 900, correct: 9, total: 10, answers: [],
+                     lesson: getLessonById('lesson-01') });
+        await tick();
+
+        // and a 拼读 sequence caught mid-flight must not carry on either
+        const mark = log.length;
+        playSequence(['audio/sheng/b.mp3', 'audio/yun/a.mp3', 'audio/syl/ba1.mp3'], null, 0);
+        await tick(60);
+        getAudioEl('audio/sheng/b.mp3').dispatchEvent(new Event('ended'));
+        await tick(60);
+        showResult({ score: 900, correct: 9, total: 10, answers: [],
+                     lesson: getLessonById('lesson-01') });
+        await tick(500);
+
+        HTMLMediaElement.prototype.play = play;
+        HTMLMediaElement.prototype.pause = pause;
+        return { all: log, afterMark: log.slice(mark) };
+    }""")
+    assert "pause lesson-01.mp3" in log["all"], log["all"]
+    assert not any("ba1" in e for e in log["afterMark"]), (
+        f"the sequence carried on past the result screen: {log['afterMark']}")
+
+
 def test_stopping_audio_cancels_a_pending_sequence(page):
     """stopAudio() must kill the gap timer too, not just the current clip."""
     page.click("#start-screen .btn-primary")
@@ -772,6 +820,55 @@ def test_stopping_audio_cancels_a_pending_sequence(page):
     }""")
     assert played == ["audio/sheng/b.mp3"], f"sequence continued after stop: {played}"
 
+
+
+def test_finishing_a_mission_silences_the_question(page):
+    """Nothing should still be talking over the result screen.
+
+    Finishing calls showScreen directly rather than navTo, so the last
+    question's clip — or a 拼读 sequence still mid-flight — used to carry on
+    with nothing on screen to explain it.
+    """
+    page.click("#start-screen .btn-primary")
+    log = page.evaluate(r"""async () => {
+        const log = [];
+        const play = HTMLMediaElement.prototype.play;
+        const pause = HTMLMediaElement.prototype.pause;
+        HTMLMediaElement.prototype.play = function () {
+            log.push('PLAY ' + (this.src || '').split('/').slice(-2).join('/'));
+            return Promise.resolve();
+        };
+        HTMLMediaElement.prototype.pause = function () {
+            log.push('PAUSE ' + (this.src || '').split('/').slice(-2).join('/'));
+            return pause.call(this);
+        };
+        const tick = ms => new Promise(r => setTimeout(r, ms || 100));
+        const done = () => showResult({ score: 900, correct: 9, total: 10,
+                                        answers: [], lesson: getLessonById('lesson-01') });
+
+        playAudio('audio/rule/lesson-01.mp3');
+        await tick(80);
+        done();
+        await tick();
+        const single = log.slice();
+
+        // and a blend sequence caught mid-flight
+        log.length = 0;
+        playSequence(['audio/sheng/b.mp3', 'audio/yun/a.mp3', 'audio/syl/ba1.mp3'], null, 0);
+        await tick(60);
+        getAudioEl('audio/sheng/b.mp3').dispatchEvent(new Event('ended'));
+        await tick(60);
+        done();
+        await tick(500);          // the third clip would land in here
+        const seq = log.slice();
+
+        HTMLMediaElement.prototype.play = play;
+        HTMLMediaElement.prototype.pause = pause;
+        return { single, seq };
+    }""")
+    assert "PAUSE rule/lesson-01.mp3" in log["single"], log["single"]
+    assert not any("ba1" in e for e in log["seq"]),         f"the rest of the sequence played over the result screen: {log['seq']}"
+    assert any(e.startswith("PAUSE") for e in log["seq"]), log["seq"]
 
 
 def test_every_sound_has_an_audio_file(page):

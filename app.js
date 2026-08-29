@@ -21,6 +21,12 @@ const RENDERERS = {
 };
 
 function showScreen(id) {
+  // Leaving a screen silences it. This lives here rather than in navTo because
+  // not every screen change goes through navTo: finishing a mission calls
+  // showScreen directly, and the last question's clip carried on playing over
+  // the result screen — audio with nothing on screen to explain it.
+  stopAudio();
+
   document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
   const el = document.getElementById(id);
   if (!el) return;
@@ -30,7 +36,6 @@ function showScreen(id) {
 }
 
 function navTo(screenId, btn) {
-  stopAudio();
   showScreen(screenId);
   if (RENDERERS[screenId]) RENDERERS[screenId]();
 
@@ -600,7 +605,6 @@ function startMission() {
 }
 
 function quitMission() {
-  stopAudio();
   document.getElementById('bottom-nav').classList.remove('hidden');
   navTo('home-screen');
 }

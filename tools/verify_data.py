@@ -51,12 +51,21 @@ def records(src):
     src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
     src = re.sub(r"//[^\n]*", "", src)
     out = []
-    for block in re.findall(r"\{[^{}]*\}", src):
-        rec = dict(re.findall(r"(\w+)\s*:\s*'([^']*)'", block))
-        rec.update({k: v == "true" for k, v in re.findall(r"(\w+)\s*:\s*(true|false)", block)})
-        rec.update({k: int(v) for k, v in re.findall(r"(\w+)\s*:\s*(\d+)", block)})
-        if rec:
-            out.append(rec)
+    # Innermost-first, then peel that layer away and go again. A sound record
+    # holds a nested mnemonicVoice:{...}, so matching only innermost braces
+    # would skip every sound and leave this checking nothing.
+    work = src
+    for _ in range(6):
+        blocks = re.findall(r"\{[^{}]*\}", work)
+        if not blocks:
+            break
+        for block in blocks:
+            rec = dict(re.findall(r"(\w+)\s*:\s*'([^']*)'", block))
+            rec.update({k: v == "true" for k, v in re.findall(r"(\w+)\s*:\s*(true|false)", block)})
+            rec.update({k: int(v) for k, v in re.findall(r"(\w+)\s*:\s*(\d+)", block)})
+            if rec:
+                out.append(rec)
+        work = re.sub(r"\{[^{}]*\}", "", work)
     return out
 
 
@@ -214,7 +223,24 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
-# ── 口诀 ────────────────────────────────────────────────────
+# ── 顺口溜 ────────────────────────────────────────────────
+#
+# A 顺口溜 printed without a voice is decoration. Each one needs a recording of
+# its phrase half; the letters after it are played from their own MP3s at run
+# time, so the phrase must not contain letters either.
+
+for m in re.finditer(r"id:'([^']+)',[^{]*?mnemonic:'([^']*)'"
+                     r"(?:\s*,?\s*mnemonicVoice:\{ say:'([^']*)', audio:'([^']*)' \})?",
+                     sounds_src, re.S):
+    sid, mnem, say, mp3 = m.group(1), m.group(2), m.group(3), m.group(4)
+    if not mp3:
+        fail(f"{sid} has a 顺口溜 「{mnem}」 with no mnemonicVoice — it cannot be read aloud")
+        continue
+    if re.search(r"(?<![一-鿿])[a-zü]", say or ""):
+        fail(f"{sid} mnemonicVoice says '{say}', which still contains letters — "
+             f"the voice would read them as English letter names")
+
+# ── 口诀 ─# ── 口诀 ────────────────────────────────────────────────────
 #
 # The 口诀 on each rule card is the one thing a child cannot decode for
 # herself: it is written for a reader. It has to be sayable, and where it

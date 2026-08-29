@@ -145,6 +145,33 @@ function buildSoundCard(sound, compact) {
       const hint = document.createElement('div');
       hint.className = 'sound-label';
       hint.textContent = sound.mnemonic;
+
+      // The 顺口溜 says itself: the phrase, then the letter three times, the
+      // way it is chanted in class. The letter comes from its own recording
+      // rather than the synthesiser, which would read a bare "b" as "bee" —
+      // so 「右下半圆 b b b」 is one phrase clip plus b.mp3 played three times.
+      if (sound.mnemonicVoice && sound.mnemonicVoice.audio) {
+        hint.setAttribute('role', 'button');
+        hint.setAttribute('tabindex', '0');
+        hint.setAttribute('aria-label', '读一读：' + sound.mnemonic);
+        hint.style.cursor = 'pointer';
+        hint.textContent = '🔊 ' + sound.mnemonic;
+
+        const chant = event => {
+          // The card itself plays the bare letter; without this, tapping the
+          // 顺口溜 would fire both and the letter would cut the phrase off.
+          event.stopPropagation();
+          hint.classList.add('animate-pop');
+          setTimeout(() => hint.classList.remove('animate-pop'), 340);
+          playSequence(
+            [sound.mnemonicVoice.audio, sound.audio, sound.audio, sound.audio],
+            null, 180);
+        };
+        hint.addEventListener('click', chant);
+        hint.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') chant(e);
+        });
+      }
       card.appendChild(hint);
     }
   }

@@ -156,6 +156,13 @@ def build_manifest() -> dict:
                 if audio and text:
                     manifest[audio] = text
 
+    # 顺口溜: the phrase half only. The letters that follow it are played from
+    # their own recordings at runtime, so the synthesiser never sees a letter.
+    for rec in parse_js_objects(ROOT / "data" / "sounds.js"):
+        audio, text = rec.get("audio"), rec.get("say")
+        if audio and text and "/mnemonic/" in audio:
+            manifest[audio] = text
+
     # 故事: poem lines, their titles, and the 生词 under each.
     stories = ROOT / "data" / "stories.js"
     if stories.exists():

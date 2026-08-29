@@ -446,7 +446,63 @@ def test_tapping_the_rule_plays_it(page):
     assert played == ["rule/lesson-03.mp3"], played
 
 
-# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
+def test_every_mnemonic_can_be_chanted(page):
+    """A 顺口溜 printed without a voice is decoration, not a memory aid."""
+    state = page.evaluate("""() => {
+        const silent = [], leaky = [];
+        SOUNDS.forEach(s => {
+            if (!s.mnemonic) return;                 // 整体认读 carry a note instead
+            if (!s.mnemonicVoice || !s.mnemonicVoice.audio) { silent.push(s.id); return; }
+            if (/(?:^|[^一-鿿])[a-zü]/.test(s.mnemonicVoice.say)) leaky.push(s.id);
+        });
+        return { silent, leaky, withMnemonic: SOUNDS.filter(s => s.mnemonic).length };
+    }""")
+    assert state["withMnemonic"] == 47
+    assert state["silent"] == [], f"mnemonics with no voice: {state['silent']}"
+    assert state["leaky"] == [], (
+        f"a spoken phrase still holding letters would be read as English: {state['leaky']}")
+
+
+def test_the_mnemonic_chants_the_phrase_then_the_letter(page):
+    """「右下半圆 b b b」 = one phrase clip, then b.mp3 three times.
+
+    The letters come from their own recordings rather than the synthesiser,
+    which reads a bare "b" as "bee".
+    """
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate("""async () => {
+        viewingLessonId = 'lesson-03';
+        navTo('lesson-screen');
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').slice(-2).join('/'));
+            return Promise.resolve();
+        };
+        const tick = ms => new Promise(r => setTimeout(r, ms || 60));
+        const hint = [...document.querySelectorAll('#lesson-content .sound-label')]
+            .find(e => e.textContent.indexOf('右下半圆') !== -1);
+        hint.click();
+        await tick(); getAudioEl('audio/mnemonic/sh-b.mp3').dispatchEvent(new Event('ended'));
+        for (let i = 0; i < 3; i++) {
+            await tick(240);
+            getAudioEl('audio/sheng/b.mp3').dispatchEvent(new Event('ended'));
+        }
+        await tick(150);
+        const chant = played.slice();
+
+        // tapping the card itself must still play only the letter
+        played.length = 0;
+        document.querySelector('#lesson-content .sound-card').click();
+        await tick();
+        HTMLMediaElement.prototype.play = orig;
+        return { chant, card: played };
+    }""")
+    assert result["chant"] == ["mnemonic/sh-b.mp3", "sheng/b.mp3", "sheng/b.mp3", "sheng/b.mp3"],         result["chant"]
+    assert result["card"] == ["sheng/b.mp3"],         f"the card should still play just the letter, played {result['card']}"
+
+
+# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
 
 def test_stories_load_with_art_and_audio(page):
     counts = page.evaluate("""() => ({

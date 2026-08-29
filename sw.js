@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = '116683fc430a';
+const VERSION = 'feba39c457fd';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */
@@ -51,7 +51,7 @@ const SHELL = [
   'art/yonge.svg',
 ];
 
-/* 773 MP3s. Best-effort — a single failure must not fail the install. */
+/* 820 MP3s. Best-effort — a single failure must not fail the install. */
 const AUDIO = [
   'audio/chant/l01-1.mp3',
   'audio/chant/l01-2.mp3',
@@ -92,6 +92,53 @@ const AUDIO = [
   'audio/chant/l13-2.mp3',
   'audio/chant/l14-1.mp3',
   'audio/chant/l14-2.mp3',
+  'audio/mnemonic/sh-b.mp3',
+  'audio/mnemonic/sh-c.mp3',
+  'audio/mnemonic/sh-ch.mp3',
+  'audio/mnemonic/sh-d.mp3',
+  'audio/mnemonic/sh-f.mp3',
+  'audio/mnemonic/sh-g.mp3',
+  'audio/mnemonic/sh-h.mp3',
+  'audio/mnemonic/sh-j.mp3',
+  'audio/mnemonic/sh-k.mp3',
+  'audio/mnemonic/sh-l.mp3',
+  'audio/mnemonic/sh-m.mp3',
+  'audio/mnemonic/sh-n.mp3',
+  'audio/mnemonic/sh-p.mp3',
+  'audio/mnemonic/sh-q.mp3',
+  'audio/mnemonic/sh-r.mp3',
+  'audio/mnemonic/sh-s.mp3',
+  'audio/mnemonic/sh-sh.mp3',
+  'audio/mnemonic/sh-t.mp3',
+  'audio/mnemonic/sh-w.mp3',
+  'audio/mnemonic/sh-x.mp3',
+  'audio/mnemonic/sh-y.mp3',
+  'audio/mnemonic/sh-z.mp3',
+  'audio/mnemonic/sh-zh.mp3',
+  'audio/mnemonic/yu-a.mp3',
+  'audio/mnemonic/yu-ai.mp3',
+  'audio/mnemonic/yu-an.mp3',
+  'audio/mnemonic/yu-ang.mp3',
+  'audio/mnemonic/yu-ao.mp3',
+  'audio/mnemonic/yu-e.mp3',
+  'audio/mnemonic/yu-ei.mp3',
+  'audio/mnemonic/yu-en.mp3',
+  'audio/mnemonic/yu-eng.mp3',
+  'audio/mnemonic/yu-er.mp3',
+  'audio/mnemonic/yu-i.mp3',
+  'audio/mnemonic/yu-ie.mp3',
+  'audio/mnemonic/yu-in.mp3',
+  'audio/mnemonic/yu-ing.mp3',
+  'audio/mnemonic/yu-iu.mp3',
+  'audio/mnemonic/yu-o.mp3',
+  'audio/mnemonic/yu-ong.mp3',
+  'audio/mnemonic/yu-ou.mp3',
+  'audio/mnemonic/yu-u.mp3',
+  'audio/mnemonic/yu-ui.mp3',
+  'audio/mnemonic/yu-un.mp3',
+  'audio/mnemonic/yu-v.mp3',
+  'audio/mnemonic/yu-ve.mp3',
+  'audio/mnemonic/yu-vn.mp3',
   'audio/rule/lesson-01.mp3',
   'audio/rule/lesson-02.mp3',
   'audio/rule/lesson-03.mp3',

@@ -248,9 +248,9 @@ unreachable MP3 should not cost the whole offline app. Registration is skipped
 on `file://`, where service workers do not exist and opening `index.html`
 directly is still the dev loop.
 
-## 口诀
+## 口诀 and 顺口溜
 
-Every rule card reads aloud on tap. The 口诀 is the one thing on a lesson screen
+Every rule card and every 顺口溜 reads aloud on tap. The 口诀 is the one thing on a lesson screen
 a child cannot decode for herself — 「前音轻短后音重，两音相连猛一碰。」 is
 written for a reader, and she is not one yet.
 
@@ -260,8 +260,19 @@ hatch the 儿歌 lines use — the page shows 「有 a 不放过」, the voice h
 「有 啊 不放过」. `verify_data.py` fails a rule with no audio, or one that prints
 letters without a `say`.
 
-`gen_audio.py` walks nested objects to find them: a rule holds a `demo: {...}`,
-and matching only innermost braces used to skip the rule itself.
+The 顺口溜 is voiced differently, because 「右下半圆 b b b」 ends in the letter
+itself. Only the phrase is synthesised; the letters are then played from their
+own recording, so the sequence is `mnemonic/sh-b.mp3` followed by `sheng/b.mp3`
+three times. The synthesiser never sees a letter, which is the whole rule of
+this app's audio. Three phrases contain letters mid-sentence — 课8's
+「z 加 h，翘起舌头」 — and their `say` carries 呼读音: 「资 加 喝，翘起舌头」.
+
+Tapping the card still plays the bare letter; the 顺口溜 stops propagation so
+the two do not fire together and cut each other off.
+
+Both `gen_audio.py` and `verify_data.py` walk nested objects to find these: a
+rule holds a `demo: {...}` and a sound holds a `mnemonicVoice: {...}`, and
+matching only innermost braces skipped the records that contain them.
 
 ## UI Conventions
 

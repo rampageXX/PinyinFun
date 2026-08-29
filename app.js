@@ -154,8 +154,20 @@ function buildSoundCard(sound, compact) {
         hint.setAttribute('role', 'button');
         hint.setAttribute('tabindex', '0');
         hint.setAttribute('aria-label', '读一读：' + sound.mnemonic);
-        hint.style.cursor = 'pointer';
-        hint.textContent = '🔊 ' + sound.mnemonic;
+        // A 7-year-old's finger needs 64px. Smaller than that and she misses,
+        // hits the card behind it, and hears the bare letter instead of the
+        // chant — a near-miss that just looks broken.
+        hint.style.cssText +=
+          ';display:flex; align-items:center; justify-content:center; gap:5px;' +
+          'min-height:64px; padding:8px 6px; cursor:pointer; border-radius:12px;' +
+          'background:var(--paper-warm);';
+        clearEl(hint);
+        const horn = document.createElement('span');
+        horn.textContent = '🔊';
+        horn.style.cssText = 'font-size:1.15rem; flex:none;';
+        const line = document.createElement('span');
+        line.textContent = sound.mnemonic;
+        hint.append(horn, line);
 
         const chant = event => {
           // The card itself plays the bare letter; without this, tapping the
@@ -363,13 +375,13 @@ function buildRuleCard(rule) {
   // decode for herself — it is written for a reader, and she is not one yet.
   const text = document.createElement('button');
   text.style.cssText =
-    'display:flex; align-items:flex-start; gap:10px; width:100%; text-align:left;' +
-    'border:none; background:none; padding:0; cursor:pointer;' +
+    'display:flex; align-items:center; gap:10px; width:100%; text-align:left;' +
+    'border:none; background:none; padding:10px 4px; cursor:pointer; min-height:64px;' +
     'font-size:1.02rem; line-height:1.8; font-weight:600; color:var(--ink);';
 
   const speaker = document.createElement('span');
   speaker.textContent = '🔊';
-  speaker.style.cssText = 'font-size:1.2rem; flex:none; margin-top:2px;';
+  speaker.style.cssText = 'font-size:1.35rem; flex:none;';
 
   const words = document.createElement('span');
   words.textContent = rule.text;

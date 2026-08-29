@@ -35,10 +35,10 @@ registerLesson({
     tones: ['ā', 'á', 'ǎ', 'à'],
     toneDemo: {
       items: [
-        { tone: 1, pinyin: 'bā', hanzi: '八', pic: '8️⃣', audio: 'audio/syl/ba1.mp3' },
-        { tone: 2, pinyin: 'bá', hanzi: '拔', pic: '🪢', audio: 'audio/syl/ba2.mp3' },
-        { tone: 3, pinyin: 'bǎ', hanzi: '把', pic: '✋', audio: 'audio/syl/ba3.mp3' },
-        { tone: 4, pinyin: 'bà', hanzi: '爸', pic: '👨', audio: 'audio/syl/ba4.mp3' },
+        { tone: 1, pinyin: 'mā', hanzi: '妈', pic: '👩', audio: 'audio/syl/ma1.mp3' },
+        { tone: 2, pinyin: 'má', hanzi: '麻', pic: '🌾', audio: 'audio/syl/ma2.mp3' },
+        { tone: 3, pinyin: 'mǎ', hanzi: '马', pic: '🐴', audio: 'audio/syl/ma3.mp3' },
+        { tone: 4, pinyin: 'mà', hanzi: '骂', pic: '😠', audio: 'audio/syl/ma4.mp3' },
       ],
     },
   },
@@ -79,10 +79,10 @@ registerLesson({
     tones: ['ī', 'í', 'ǐ', 'ì'],
     toneDemo: {
       items: [
-        { tone: 1, pinyin: 'bā', hanzi: '八', pic: '8️⃣', audio: 'audio/syl/ba1.mp3' },
-        { tone: 2, pinyin: 'bá', hanzi: '拔', pic: '🪢', audio: 'audio/syl/ba2.mp3' },
-        { tone: 3, pinyin: 'bǎ', hanzi: '把', pic: '✋', audio: 'audio/syl/ba3.mp3' },
-        { tone: 4, pinyin: 'bà', hanzi: '爸', pic: '👨', audio: 'audio/syl/ba4.mp3' },
+        { tone: 1, pinyin: 'mā', hanzi: '妈', pic: '👩', audio: 'audio/syl/ma1.mp3' },
+        { tone: 2, pinyin: 'má', hanzi: '麻', pic: '🌾', audio: 'audio/syl/ma2.mp3' },
+        { tone: 3, pinyin: 'mǎ', hanzi: '马', pic: '🐴', audio: 'audio/syl/ma3.mp3' },
+        { tone: 4, pinyin: 'mà', hanzi: '骂', pic: '😠', audio: 'audio/syl/ma4.mp3' },
       ],
     },
   },

@@ -46,6 +46,40 @@ def read(path):
     return (DATA / path).read_text(encoding="utf-8")
 
 
+TONE_MARKS = {
+    "ā": 1, "á": 2, "ǎ": 3, "à": 4,
+    "ō": 1, "ó": 2, "ǒ": 3, "ò": 4,
+    "ē": 1, "é": 2, "ě": 3, "è": 4,
+    "ī": 1, "í": 2, "ǐ": 3, "ì": 4,
+    "ū": 1, "ú": 2, "ǔ": 3, "ù": 4,
+    "ǖ": 1, "ǘ": 2, "ǚ": 3, "ǜ": 4,
+}
+
+
+def _tone(reading):
+    for ch in reading:
+        if ch in TONE_MARKS:
+            return TONE_MARKS[ch]
+    return 0
+
+
+def readings(hanzi):
+    """(default tone, every tone it can be read as). (0, set()) without pypinyin.
+
+    The default is what the synthesiser will almost certainly say, so a default
+    in the wrong tone is an error. The alternates are only a risk, and pypinyin
+    lists rare and archaic ones — no four-tone set in Mandarin is free of them,
+    so treating any overlap as a failure would reject every possible example.
+    """
+    try:
+        from pypinyin import pinyin as _py, Style as _S
+    except ImportError:
+        return 0, set()
+    default = _tone(_py(hanzi, style=_S.TONE)[0][0])
+    alts = {_tone(r) for r in _py(hanzi, style=_S.TONE, heteronym=True)[0]}
+    return default, {a for a in alts if a}
+
+
 def records(src):
     """Every innermost {...} literal, as a dict of its simple fields."""
     src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
@@ -244,9 +278,28 @@ for body in re.findall(r"rule: \{(.*?)\n  \},", lessons_src, re.S):
                        r"pic: '([^']*)', audio: '([^']*)' \}", demo.group(1))
     if len(items) != n_marks:
         fail(f"rule {rid} shows {n_marks} tone marks but {len(items)} examples")
-    for n, (tone, pinyin, hanzi, pic, mp3) in enumerate(items, 1):
+    for n, (tone, pinyin_, hanzi, pic, mp3) in enumerate(items, 1):
         if int(tone) != n:
-            fail(f"rule {rid} toneDemo is out of order at {pinyin}: tone {tone} in slot {n}")
+            fail(f"rule {rid} toneDemo is out of order at {pinyin_}: tone {tone} in slot {n}")
+
+    # A demo character with a second reading in another tone of the same set is
+    # the worst case here: 把 is bǎ, but also bà — which is 爸, sitting right
+    # beside it. The third card would sound like the fourth, on the one screen
+    # whose whole job is telling them apart.
+    tones_here = {int(t) for t, _, _, _, _ in items}
+    for tone, pinyin_, hanzi, pic, mp3 in items:
+        default, alts = readings(hanzi)
+        if not default:
+            continue
+        if default != int(tone):
+            fail(f"rule {rid} toneDemo uses {hanzi} for {pinyin_}, but it reads as "
+                 f"tone {default} by default — the synthesiser will say the wrong tone")
+        collide = sorted(a for a in alts if a in tones_here and a != int(tone))
+        if collide:
+            notes.append(
+                f"{rid}: {hanzi} ({pinyin_}) also reads as tone {collide} — the same "
+                f"tone as another card in this set. Rare readings, but this is the one "
+                f"screen where a wrong tone teaches the wrong thing: check it by ear.")
 
 # ── 顺口溜 ─# ── 顺口溜 ────────────────────────────────────────────────
 #

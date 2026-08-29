@@ -254,10 +254,22 @@ A rule showing tone marks carries a `toneDemo`: four cards pairing each mark
 with a real word in that tone, tappable, plus a button that plays all four in a
 row. Comparison is the whole point — a single tone in isolation says nothing.
 
-The example is **八 拔 把 爸**, not the letter itself. `ǎ` and `á` have no
+The example is **妈 麻 马 骂**, not the letter itself. `ǎ` and `á` have no
 character in common use, so a bare vowel in four tones cannot be synthesised at
 all — the same wall that keeps 课1's tone drill down to `e`. One syllable across
-four tones is how tones are taught anyway, and 爸 is a word she already owns.
+four tones is how tones are taught anyway.
+
+It was 八 拔 把 爸 first, and the third tone came out wrong. 把 is polyphonic —
+bǎ, bà, pá — and it is overwhelmingly a *grammatical particle*, so a synthesiser
+renders it de-stressed rather than as the full dipping contour the rule
+describes. 马 is a stressed noun with one reading, which is what a tone example
+has to be. Prefer content words over function words here.
+
+Choosing by measurement rather than taste: `verify_data.py` **fails** a demo
+character whose default reading is the wrong tone, and **notes** one whose rarer
+alternate collides with another card in the set. It is a note and not a failure
+because pypinyin lists archaic readings and no four-tone set in Mandarin is free
+of them — 麻 can be mā. The note exists to point the ear at the right place.
 
 `verify_data.py` fails a rule that prints tone marks with no `toneDemo`, or
 whose examples are out of tone order.

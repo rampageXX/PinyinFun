@@ -619,7 +619,7 @@ def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
         played.length = 0;
         [...document.querySelectorAll('#lesson-content button')]
             .find(b => b.textContent.indexOf('▶ 听一听') === 0).click();
-        for (const t of ['ba1', 'ba2', 'ba3', 'ba4']) {
+        for (const t of ['ma1', 'ma2', 'ma3', 'ma4']) {
             await tick();
             getAudioEl('audio/syl/' + t + '.mp3').dispatchEvent(new Event('ended'));
             await tick(460);
@@ -629,8 +629,8 @@ def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
                  labels: chips.map(c => c.getAttribute('aria-label')) };
     }""")
     assert result["count"] == 4, result["count"]
-    assert result["single"] == ["ba3.mp3"], f"三声 should play bǎ, played {result['single']}"
-    assert result["all"] == ["ba1.mp3", "ba2.mp3", "ba3.mp3", "ba4.mp3"], result["all"]
+    assert result["single"] == ["ma3.mp3"], f"三声 should play mǎ 马, played {result['single']}"
+    assert result["all"] == ["ma1.mp3", "ma2.mp3", "ma3.mp3", "ma4.mp3"], result["all"]
     assert all(h >= 64 for h in result["heights"]), result["heights"]
 
 

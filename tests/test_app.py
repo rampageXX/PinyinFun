@@ -204,6 +204,19 @@ def run_mission(page):
                 });
                 return;
             }
+            // 我会读 needs a choice and then a 确定; tapping an option only
+            // plays it, so a single blind click would never answer.
+            const confirm = [...area.querySelectorAll('button')]
+                .filter(b => b.textContent === '确定')[0];
+            if (confirm) {
+                if (confirm.disabled) {
+                    const opt = area.querySelector('.sound-card');
+                    if (opt) opt.click();
+                } else {
+                    confirm.click();
+                }
+                return;
+            }
             const btns = [...area.querySelectorAll('button')]
                 .filter(b => !b.disabled && !b.classList.contains('speaker'));
             if (btns.length) btns[0].click();
@@ -241,7 +254,8 @@ def run_scripted_mission(page, wrong_answers=0):
     """Drive a mission with a known score, bypassing each game's own UI."""
     page.evaluate("""(wrong) => {
         window.__wrongLeft = wrong;
-        ['initListenPick', 'initToneTrain', 'initBlendBuilder', 'initSharpEyes']
+        ['initListenPick', 'initToneTrain', 'initBlendBuilder', 'initSharpEyes',
+         'initReadPick']
           .forEach(n => {
             window[n] = function (...a) {
                 const cb = a[a.length - 1];
@@ -709,7 +723,104 @@ def test_reading_a_story_to_the_end_marks_it_read(page):
     assert page.evaluate("() => isStoryRead('story-yonge')"), "finishing should mark it read"
 
 
-# ── audio ────────────────────────────────────────────────────────────
+# ── 我会读 ────────────────────────────────────────────────
+
+def test_read_pick_asks_her_to_read_the_tone_mark(page):
+    """Distractors are the same syllable in other tones.
+
+    That is the point of the game: bǎ against bā against bà cannot be told
+    apart from the letters, only by reading the mark. A distractor from a
+    different syllable would let her answer on the consonant alone.
+    """
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate("""async () => {
+        navTo('game-screen');
+        const syl = SYLLABLES.filter(s => s.base === 'ba')[0];   // four tones
+        initReadPick(syl, syllablesUpToLesson(3), () => {});
+        const area = document.getElementById('game-area');
+
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        const cards = [...area.querySelectorAll('.sound-card')];
+        const clips = [];
+        for (const c of cards) {
+            played.length = 0;
+            c.click();
+            await new Promise(r => setTimeout(r, 40));
+            clips.push(played[0]);
+        }
+        HTMLMediaElement.prototype.play = orig;
+        return {
+            shown: area.querySelector('.card').innerText.replace(/\s+/g, ' ').trim(),
+            clips: clips,
+            options: cards.length,
+        };
+    }""")
+    assert result["options"] == 3, result["options"]
+    # every clip is a reading of the same syllable — she must read the mark
+    assert all(c and c.startswith("ba") for c in result["clips"]), result["clips"]
+    assert len(set(result["clips"])) == 3, f"clips must differ: {result['clips']}"
+
+
+def test_read_pick_needs_a_choice_then_a_confirm(page):
+    """Listening to all of them before deciding is the activity.
+
+    So tapping an option must not answer the question — otherwise the first
+    thing she taps to hear is the answer she gave.
+    """
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate("""async () => {
+        navTo('game-screen');
+        let done = null;
+        initReadPick(SYLLABLES.filter(s => s.base === 'ba')[0],
+                     syllablesUpToLesson(3), r => { done = r; });
+        const area = document.getElementById('game-area');
+        const confirm = [...area.querySelectorAll('button')]
+            .filter(b => b.textContent === '确定')[0];
+        const before = confirm.disabled;
+
+        const cards = [...area.querySelectorAll('.sound-card')];
+        cards[0].click();
+        await new Promise(r => setTimeout(r, 40));
+        const afterListening = { confirmEnabled: !confirm.disabled, answered: done };
+
+        cards[1].click();                     // changing her mind is free
+        await new Promise(r => setTimeout(r, 40));
+        const afterChanging = done;
+
+        confirm.click();
+        await new Promise(r => setTimeout(r, 1800));
+        return { before, afterListening, afterChanging, done };
+    }""")
+    assert result["before"] is True, "确定 starts disabled"
+    assert result["afterListening"]["confirmEnabled"] is True
+    assert result["afterListening"]["answered"] is None, "listening must not answer"
+    assert result["afterChanging"] is None, "changing choice must not answer"
+    assert result["done"] is not None and "correct" in result["done"], result["done"]
+
+
+def test_every_lesson_gets_reading_practice(page):
+    counts = page.evaluate("""() => LESSONS.map(l => {
+        const items = pickTodaysItems('2026-08-29', l);
+        const sched = buildSchedule(items, 'x' + l.id);
+        return {
+            order: l.order,
+            len: sched.length,
+            read: sched.filter(q => q.type === 'readPick').length,
+            ok: sched.filter(q => q.type === 'readPick')
+                     .every(q => q.item && q.item.tones && q.item.tones.length),
+        };
+    })""")
+    assert all(c["len"] == 10 for c in counts), [c for c in counts if c["len"] != 10]
+    assert all(c["read"] >= 1 for c in counts), [c for c in counts if c["read"] < 1]
+    assert all(c["ok"] for c in counts), [c for c in counts if not c["ok"]]
+
+
+# ── audio ─# ── audio ────────────────────────────────────────────────────────────
 
 def test_audio_does_not_leak_between_lessons(page):
     """A 拼读 sequence cut short must not resume inside a later lesson.

@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = 'ff403b833848';
+const VERSION = '90d5ef5b897d';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */
@@ -36,6 +36,7 @@ const SHELL = [
   'games/blendBuilder.js',
   'games/dailyMission.js',
   'games/listenPick.js',
+  'games/readPick.js',
   'games/sharpEyes.js',
   'games/toneTrain.js',
   'data/sounds.js',

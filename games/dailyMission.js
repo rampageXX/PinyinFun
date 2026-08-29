@@ -20,6 +20,7 @@ function runDailyMission(lesson, onDone) {
   const items = pickTodaysItems(getTodayString(), lesson);
   const schedule = buildSchedule(items, getTodayString() + lesson.id);
   const pool = availableSounds(lesson.order);   // never show an unmet letter
+  const sylPool = syllablesUpToLesson(lesson.order);
 
   let idx = 0, score = 0, correct = 0, sessionStreak = 0;
   const answers = [];
@@ -39,6 +40,8 @@ function runDailyMission(lesson, onDone) {
       initListenPick(q.item, pool, r => handle(r, q));
     } else if (q.type === 'toneTrain') {
       initToneTrain(q.item, r => handle(r, q));
+    } else if (q.type === 'readPick') {
+      initReadPick(q.item, sylPool, r => handle(r, q));
     } else if (q.type === 'blendBuilder') {
       initBlendBuilder(q.item, pool, r => handle(r, q));
     } else {
@@ -83,7 +86,7 @@ function runDailyMission(lesson, onDone) {
     if (!label) return;
     const names = {
       listenPick: '听音选一选', toneTrain: '声调小火车',
-      blendBuilder: '拼一拼', sharpEyes: '火眼金睛',
+      blendBuilder: '拼一拼', sharpEyes: '火眼金睛', readPick: '我会读',
     };
     label.textContent = names[type] || '';
     setTimeout(updateProgress, 900);
@@ -109,12 +112,14 @@ function buildSchedule(items, seed) {
   // Sounds with a confusable set are the only ones worth a 火眼金睛 round.
   const sharpPool = sounds.filter(s => (s.confusable || []).length);
 
+  // 我会读 runs pinyin → sound, the opposite of every other game here, so it
+  // earns a slot in both schedules that have syllables to read.
   const wanted = blendPool.length
-    ? ['listenPick', 'blendBuilder', 'toneTrain', 'listenPick', 'blendBuilder',
-       'sharpEyes', 'listenPick', 'toneTrain', 'blendBuilder', 'listenPick']
+    ? ['listenPick', 'blendBuilder', 'readPick', 'listenPick', 'blendBuilder',
+       'sharpEyes', 'listenPick', 'toneTrain', 'readPick', 'listenPick']
     : syllables.length
-      ? ['listenPick', 'toneTrain', 'sharpEyes', 'listenPick', 'toneTrain',
-         'listenPick', 'sharpEyes', 'listenPick', 'toneTrain', 'listenPick']
+      ? ['listenPick', 'toneTrain', 'readPick', 'listenPick', 'toneTrain',
+         'sharpEyes', 'listenPick', 'readPick', 'toneTrain', 'listenPick']
       : ['listenPick', 'sharpEyes', 'listenPick', 'listenPick', 'sharpEyes',
          'listenPick', 'listenPick', 'sharpEyes', 'listenPick', 'listenPick'];
 
@@ -129,7 +134,7 @@ function buildSchedule(items, seed) {
         return;
       }
     }
-    if (type === 'toneTrain') {
+    if (type === 'toneTrain' || type === 'readPick') {
       if (!syllables.length) type = 'listenPick';
       else {
         schedule.push({ type, item: syllables[yi++ % syllables.length] });

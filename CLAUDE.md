@@ -99,6 +99,7 @@ games/
   blendBuilder.js   # 拼一拼 — drag 声母+韵母, the core skill
   toneTrain.js      # 声调小火车
   sharpEyes.js      # 火眼金睛 — b/d/p/q discrimination
+  readPick.js       # 我会读 — pinyin on screen, pick the matching recording
   dailyMission.js   # 10-question session orchestrator
 lib/
   storage.js audio.js ruby.js strength.js
@@ -147,6 +148,11 @@ tests/test_app.py   # Playwright smoke test
   From 课3 on, six of the ten slots go to blending and tone drills, so lessons
   teaching more than four letters (课7 8 9 12 13 14) take two sittings — the
   result screen names the letters still waiting.
+- **Letter slots**: only 听音选一选 and 火眼金睛 ask about a *letter*, and
+  clearing needs every letter asked, so those two must keep five slots between
+  them. 我会读 was added at the cost of a 拼一拼 and a 声调小火车 for exactly
+  this reason — taking it out of listenPick left 课3's four letters with three
+  slots and the lesson could never clear in one sitting.
 - **Coverage ordering**: `pickTodaysItems` puts never-asked letters at the
   front. This is load-bearing, not a nicety: the draw is seeded by date, so
   without it a second sitting on the same day repeats the identical letters and

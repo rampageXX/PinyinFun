@@ -223,7 +223,32 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
-# ── 顺口溜 ────────────────────────────────────────────────
+# ── 四声 ──────────────────────────────────────────────────────
+#
+# A rule that shows tone marks must be able to play them. 「一声平，二声扬」
+# describes a sound; without an example she has never heard one.
+
+for body in re.findall(r"rule: \{(.*?)\n  \},", lessons_src, re.S):
+    m_rid = re.search(r"id: '([^']*)'", body)
+    rid = m_rid.group(1) if m_rid else "?"
+    marks = re.search(r"tones: \[([^\]]*)\]", body)
+    if not marks:
+        continue
+    n_marks = len(re.findall(r"'[^']+'", marks.group(1)))
+    demo = re.search(r"toneDemo: \{(.*?)\n    \},", body, re.S)
+    if not demo:
+        fail(f"rule {rid} shows {n_marks} tone marks but has no toneDemo — "
+             f"a silent tone mark teaches nothing")
+        continue
+    items = re.findall(r"\{ tone: (\d+), pinyin: '([^']*)', hanzi: '([^']*)', "
+                       r"pic: '([^']*)', audio: '([^']*)' \}", demo.group(1))
+    if len(items) != n_marks:
+        fail(f"rule {rid} shows {n_marks} tone marks but {len(items)} examples")
+    for n, (tone, pinyin, hanzi, pic, mp3) in enumerate(items, 1):
+        if int(tone) != n:
+            fail(f"rule {rid} toneDemo is out of order at {pinyin}: tone {tone} in slot {n}")
+
+# ── 顺口溜 ─# ── 顺口溜 ────────────────────────────────────────────────
 #
 # A 顺口溜 printed without a voice is decoration. Each one needs a recording of
 # its phrase half; the letters after it are played from their own MP3s at run

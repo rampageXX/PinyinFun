@@ -248,6 +248,20 @@ unreachable MP3 should not cost the whole offline app. Registration is skipped
 on `file://`, where service workers do not exist and opening `index.html`
 directly is still the dev loop.
 
+## 四声 must be hearable
+
+A rule showing tone marks carries a `toneDemo`: four cards pairing each mark
+with a real word in that tone, tappable, plus a button that plays all four in a
+row. Comparison is the whole point — a single tone in isolation says nothing.
+
+The example is **八 拔 把 爸**, not the letter itself. `ǎ` and `á` have no
+character in common use, so a bare vowel in four tones cannot be synthesised at
+all — the same wall that keeps 课1's tone drill down to `e`. One syllable across
+four tones is how tones are taught anyway, and 爸 is a word she already owns.
+
+`verify_data.py` fails a rule that prints tone marks with no `toneDemo`, or
+whose examples are out of tone order.
+
 ## Nothing on a lesson screen is silent
 
 She cannot read. Every block of text on a lesson screen has a 🔊 and reads on

@@ -33,6 +33,14 @@ registerLesson({
     text: '一声平，二声扬，三声拐弯，四声降。',
     audio: 'audio/rule/lesson-01.mp3',
     tones: ['ā', 'á', 'ǎ', 'à'],
+    toneDemo: {
+      items: [
+        { tone: 1, pinyin: 'bā', hanzi: '八', pic: '8️⃣', audio: 'audio/syl/ba1.mp3' },
+        { tone: 2, pinyin: 'bá', hanzi: '拔', pic: '🪢', audio: 'audio/syl/ba2.mp3' },
+        { tone: 3, pinyin: 'bǎ', hanzi: '把', pic: '✋', audio: 'audio/syl/ba3.mp3' },
+        { tone: 4, pinyin: 'bà', hanzi: '爸', pic: '👨', audio: 'audio/syl/ba4.mp3' },
+      ],
+    },
   },
   words: [
     { hanzi: '鹅', pinyin: 'é', pic: '🦢', audio: 'audio/word/鹅.mp3' },
@@ -69,6 +77,14 @@ registerLesson({
     say: '小 衣 戴上帽子，就要把头上的点摘下来。',
     audio: 'audio/rule/lesson-02.mp3',
     tones: ['ī', 'í', 'ǐ', 'ì'],
+    toneDemo: {
+      items: [
+        { tone: 1, pinyin: 'bā', hanzi: '八', pic: '8️⃣', audio: 'audio/syl/ba1.mp3' },
+        { tone: 2, pinyin: 'bá', hanzi: '拔', pic: '🪢', audio: 'audio/syl/ba2.mp3' },
+        { tone: 3, pinyin: 'bǎ', hanzi: '把', pic: '✋', audio: 'audio/syl/ba3.mp3' },
+        { tone: 4, pinyin: 'bà', hanzi: '爸', pic: '👨', audio: 'audio/syl/ba4.mp3' },
+      ],
+    },
   },
   words: [
     { hanzi: '衣服', pinyin: 'yī fu', pic: '👕', audio: 'audio/word/衣服.mp3' },

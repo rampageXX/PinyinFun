@@ -155,7 +155,8 @@ TIER2_RANK = {ch: i for i, ch in enumerate(TIER2) if ch not in COMMON_RANK}
 # Where frequency ranking picks a technically-common but pedagogically-poor
 # character, name the right one explicitly. Keyed by (written form, tone).
 OVERRIDES = {
-    ("ba", 1): "八", ("ba", 4): "爸", ("ma", 1): "妈", ("ma", 3): "马",
+    ("ba", 1): "八", ("ba", 2): "拔", ("ba", 3): "把", ("ba", 4): "爸",
+    ("ma", 2): "麻", ("ma", 4): "骂", ("ma", 1): "妈", ("ma", 3): "马",
     ("mi", 3): "米", ("mu", 4): "木", ("bo", 1): "波", ("po", 1): "坡",
     ("fu", 4): "父", ("da", 4): "大", ("di", 4): "弟", ("tu", 4): "兔",
     ("li", 4): "力", ("ge", 1): "哥", ("gu", 3): "鼓", ("he", 2): "禾",

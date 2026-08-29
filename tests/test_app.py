@@ -577,7 +577,64 @@ def test_the_new_controls_are_big_enough_to_hit(page):
     assert sizes["rule"] >= 64, sizes["rule"]
 
 
-# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
+def test_each_tone_mark_has_a_sound_behind_it(page):
+    """「一声平，二声扬」 describes a sound. She has to be able to hear one."""
+    state = page.evaluate("""() => {
+        const bad = [];
+        LESSONS.forEach(l => {
+            if (!l.rule || !l.rule.tones) return;
+            const d = l.rule.toneDemo;
+            if (!d || d.items.length !== l.rule.tones.length) { bad.push(l.id); return; }
+            d.items.forEach((it, n) => {
+                if (it.tone !== n + 1 || !it.audio || !it.hanzi) bad.push(l.id + ':' + it.pinyin);
+            });
+        });
+        return { bad, withTones: LESSONS.filter(l => l.rule && l.rule.tones).length };
+    }""")
+    assert state["withTones"] >= 1
+    assert state["bad"] == [], f"tone marks with no example: {state['bad']}"
+
+
+def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate("""async () => {
+        viewingLessonId = 'lesson-01';
+        navTo('lesson-screen');
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        const tick = ms => new Promise(r => setTimeout(r, ms || 60));
+        const chips = [...document.querySelectorAll('#lesson-content button')]
+            .filter(b => /^[一二三四]声：/.test(b.getAttribute('aria-label') || ''));
+
+        chips[2].click();                      // 三声
+        await tick();
+        const single = played.slice();
+        const heights = chips.map(c => Math.round(c.getBoundingClientRect().height));
+
+        played.length = 0;
+        [...document.querySelectorAll('#lesson-content button')]
+            .find(b => b.textContent.indexOf('▶ 听一听') === 0).click();
+        for (const t of ['ba1', 'ba2', 'ba3', 'ba4']) {
+            await tick();
+            getAudioEl('audio/syl/' + t + '.mp3').dispatchEvent(new Event('ended'));
+            await tick(460);
+        }
+        HTMLMediaElement.prototype.play = orig;
+        return { count: chips.length, single, all: played, heights,
+                 labels: chips.map(c => c.getAttribute('aria-label')) };
+    }""")
+    assert result["count"] == 4, result["count"]
+    assert result["single"] == ["ba3.mp3"], f"三声 should play bǎ, played {result['single']}"
+    assert result["all"] == ["ba1.mp3", "ba2.mp3", "ba3.mp3", "ba4.mp3"], result["all"]
+    assert all(h >= 64 for h in result["heights"]), result["heights"]
+
+
+# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
 
 def test_stories_load_with_art_and_audio(page):
     counts = page.evaluate("""() => ({

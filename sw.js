@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = '00d6cc61834f';
+const VERSION = '4c50f36f5888';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */
@@ -51,7 +51,7 @@ const SHELL = [
   'art/yonge.svg',
 ];
 
-/* 834 MP3s. Best-effort — a single failure must not fail the install. */
+/* 837 MP3s. Best-effort — a single failure must not fail the install. */
 const AUDIO = [
   'audio/chant/l01-1.mp3',
   'audio/chant/l01-2.mp3',
@@ -216,6 +216,7 @@ const AUDIO = [
   'audio/story/yonge-4.mp3',
   'audio/story/yonge-title.mp3',
   'audio/syl/ba1.mp3',
+  'audio/syl/ba2.mp3',
   'audio/syl/ba3.mp3',
   'audio/syl/ba4.mp3',
   'audio/syl/bai2.mp3',
@@ -456,7 +457,9 @@ const AUDIO = [
   'audio/syl/lun2.mp3',
   'audio/syl/lv4.mp3',
   'audio/syl/ma1.mp3',
+  'audio/syl/ma2.mp3',
   'audio/syl/ma3.mp3',
+  'audio/syl/ma4.mp3',
   'audio/syl/mai3.mp3',
   'audio/syl/mai4.mp3',
   'audio/syl/man4.mp3',

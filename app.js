@@ -421,18 +421,67 @@ function buildRuleCard(rule) {
 
   card.append(label, text);
 
-  // 四声 shown as the four tone colours on one letter.
+  // 四声, and each one has to be hearable. The tone mark alone teaches nothing
+  // — 「一声平，二声扬」 is a description of a sound she has never heard. Each
+  // card pairs the mark with a real word in that tone and plays it on tap.
+  //
+  // The example is 八 拔 把 爸 rather than the letter itself: ǎ and á have no
+  // character in common use, so bare vowels in four tones cannot be voiced at
+  // all. One syllable across four tones is how tones are taught anyway — the
+  // point is the contour, and 爸 is a word she already owns.
   if (rule.tones) {
+    const names = ['一声', '二声', '三声', '四声'];
+    const demo = rule.toneDemo;
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex; gap:10px; justify-content:center; margin-top:14px;';
+    row.style.cssText =
+      'display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap;';
+
     rule.tones.forEach((t, i) => {
-      const chip = document.createElement('span');
-      chip.className = 'sound-letter t' + (i + 1);
-      chip.style.cssText = 'font-size:2.2rem; transform:none;';
-      chip.textContent = t;
+      const item = demo && demo.items[i];
+      const chip = document.createElement(item ? 'button' : 'span');
+      chip.style.cssText =
+        'display:flex; flex-direction:column; align-items:center; gap:2px;' +
+        'min-width:64px; min-height:64px; padding:8px 10px; border-radius:14px;' +
+        (item ? 'cursor:pointer; border:2px solid var(--paper-edge);' +
+                'background:var(--paper);' : 'border:none; background:none;');
+
+      const mark = document.createElement('span');
+      mark.className = 'sound-letter t' + (i + 1);
+      mark.style.cssText = 'font-size:2rem; transform:none; line-height:1.1;';
+      mark.textContent = t;
+      chip.appendChild(mark);
+
+      if (item) {
+        const name = document.createElement('span');
+        name.style.cssText = 'font-size:0.62rem; color:var(--ink-light);';
+        name.textContent = names[i];
+        const word = document.createElement('span');
+        word.style.cssText = 'font-size:0.9rem; margin-top:2px;';
+        word.textContent = item.pic + ' ' + item.hanzi;
+        chip.append(name, word);
+        chip.setAttribute('aria-label', names[i] + '：' + item.pinyin + ' ' + item.hanzi);
+        chip.addEventListener('click', () => {
+          chip.classList.add('animate-pop');
+          setTimeout(() => chip.classList.remove('animate-pop'), 340);
+          playAudio(item.audio);
+        });
+      }
       row.appendChild(chip);
     });
     card.appendChild(row);
+
+    // And all four in a row, which is what makes the contour audible: the
+    // difference between them only shows up in comparison.
+    if (demo) {
+      const all = document.createElement('button');
+      all.className = 'btn btn-secondary btn-full';
+      all.style.cssText += 'margin-top:12px; min-height:64px;';
+      all.textContent = '▶ 听一听 四个声调';
+      all.addEventListener('click', () => {
+        playSequence(demo.items.map(x => x.audio), null, 420);
+      });
+      card.appendChild(all);
+    }
   }
 
   // A worked blend: b + ā = bā, tappable to hear it.

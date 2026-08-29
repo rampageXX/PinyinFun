@@ -212,6 +212,24 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
+# ── 儿歌 repeats ─────────────────────────────────────────────────────
+#
+# A chant line like 鹅鹅鹅 is three separate beats the child echoes back, but
+# written solid the voice reads it as one long "ééé". Such a line needs a `say`
+# that spaces the characters out. Real reduplicated words (爸爸) must NOT have
+# one — they are a single word and should sound like it.
+
+lessons_src_all = read("lessons/lessons.js")
+for body in re.findall(r"\{([^{}]*audio: 'audio/chant/[^']+'[^{}]*)\}", lessons_src_all):
+    m_h = re.search(r"hanzi: '([^']+)'", body)
+    m_a = re.search(r"audio: '([^']+)'", body)
+    if not m_h or not m_a:
+        continue
+    hanzi = m_h.group(1)
+    if len(hanzi) >= 2 and len(set(hanzi)) == 1 and "say:" not in body:
+        fail(f"{m_a.group(1)} says '{hanzi}' — a repeated 韵母 beat needs a `say` "
+             f"like '{'，'.join(hanzi)}', or the voice runs it into one sound")
+
 # ── service worker ───────────────────────────────────────────────────
 #
 # The offline cache is a generated list of files. If gen_audio.py adds an MP3

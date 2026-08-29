@@ -132,7 +132,13 @@ def build_manifest() -> dict:
         for lesson_file in sorted(lessons_dir.glob("lesson*.js")):
             for rec in parse_js_objects(lesson_file):
                 audio = rec.get("audio")
-                text = rec.get("hanzi") or rec.get("word")
+                # `say` wins over `hanzi` when the two differ: a 儿歌 line like
+                # 鹅鹅鹅 is three separate beats the child repeats after the
+                # teacher, but written solid the voice reads it as one long
+                # "ééé". The page still shows 鹅鹅鹅; only the voice hears
+                # 鹅，鹅，鹅. Real reduplicated words (爸爸, 妈妈) have no `say`
+                # and stay a single word, which is correct for them.
+                text = rec.get("say") or rec.get("hanzi") or rec.get("word")
                 if audio and text:
                     manifest[audio] = text
 

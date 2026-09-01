@@ -176,8 +176,30 @@ python tools/gen_audio.py            # generates everything missing, skips exist
 python tools/gen_audio.py --manifest # inspect what it would say, generate nothing
 ```
 
-**Two sounds cannot be synthesised reliably and are flagged `needsRecording` in
+### A letter has no tone
+
+The character carries one, though, and the letter inherits it. `e` was
+synthesised from 鹅 — which reads **é** — so the bare letter sounded exactly
+like second tone, on the same screen that teaches 四声. Six were swapped for
+level-tone characters with the same sound:
+
+| letter | was | now |
+|---|---|---|
+| a | 啊 (neutral) | 阿 ā |
+| e | 鹅 é | 婀 ē |
+| ao | 熬 áo | 凹 āo |
+| ie | 耶 yé | 椰 yē |
+| ang | 昂 áng | 肮 āng |
+| c | 雌 cí | 疵 cī |
+
+`verify_data.py` now **fails** any letter voiced by a character that does not
+read in first tone, unless it is flagged `needsRecording`. 整体认读音节 are
+exempt: they are syllables, and syllables have tones.
+
+**Nine sounds cannot be synthesised level and are flagged `needsRecording` in
 `data/sounds.js`:**
+- `f d t n r ei er` — no common character reads these in first tone
+  (佛 fó, 得 dé, 特 tè, 讷 nè, 日 rì, 诶 éi, 儿 ér)
 - `eng` — maps to 鞥, a rare character the voice may mispronounce
 - `ong` — has *no* standalone syllable in Mandarin, so no character exists at all
 

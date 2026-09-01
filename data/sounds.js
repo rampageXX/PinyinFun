@@ -28,7 +28,7 @@
 const SOUNDS = [
 
   /* ── 单韵母 (6) ─────────────────────────────────────────────── */
-  { id:'yu-a', type:'yunmu', sub:'dan', text:'a', hanzi:'啊', pic:'👧',
+  { id:'yu-a', type:'yunmu', sub:'dan', text:'a', hanzi:'阿', pic:'👧',
     mnemonic:'张大嘴巴 a a a',
     mnemonicVoice:{ say:'张大嘴巴', audio:'audio/mnemonic/yu-a.mp3' }, confusable:['yu-o','yu-e'],
     lesson:'lesson-01', audio:'audio/yun/a.mp3' },
@@ -36,7 +36,7 @@ const SOUNDS = [
     mnemonic:'公鸡打鸣 o o o',
     mnemonicVoice:{ say:'公鸡打鸣', audio:'audio/mnemonic/yu-o.mp3' }, confusable:['yu-a','yu-e'],
     lesson:'lesson-01', audio:'audio/yun/o.mp3' },
-  { id:'yu-e', type:'yunmu', sub:'dan', text:'e', hanzi:'鹅', pic:'🦢',
+  { id:'yu-e', type:'yunmu', sub:'dan', text:'e', hanzi:'婀', pic:'🦢',
     mnemonic:'白鹅倒影 e e e',
     mnemonicVoice:{ say:'白鹅倒影', audio:'audio/mnemonic/yu-e.mp3' }, confusable:['yu-o','yu-a'],
     lesson:'lesson-01', audio:'audio/yun/e.mp3' },
@@ -69,20 +69,20 @@ const SOUNDS = [
   { id:'sh-f', type:'shengmu', text:'f', hanzi:'佛', pic:'🦯',
     mnemonic:'一根拐棍 f f f',
     mnemonicVoice:{ say:'一根拐棍', audio:'audio/mnemonic/sh-f.mp3' }, confusable:['sh-t'],
-    lesson:'lesson-03', audio:'audio/sheng/f.mp3' },
+    needsRecording:true, recordNote:'佛 读作 fó，是二声，字母要读平的', lesson:'lesson-03', audio:'audio/sheng/f.mp3' },
 
   { id:'sh-d', type:'shengmu', text:'d', hanzi:'得', pic:'🥁',
     mnemonic:'左下半圆 d d d',
     mnemonicVoice:{ say:'左下半圆', audio:'audio/mnemonic/sh-d.mp3' }, confusable:['sh-b','sh-q','sh-p'],
-    lesson:'lesson-04', audio:'audio/sheng/d.mp3' },
+    needsRecording:true, recordNote:'得 读作 dé，是二声，字母要读平的', lesson:'lesson-04', audio:'audio/sheng/d.mp3' },
   { id:'sh-t', type:'shengmu', text:'t', hanzi:'特', pic:'☂️',
     mnemonic:'伞柄朝下 t t t',
     mnemonicVoice:{ say:'伞柄朝下', audio:'audio/mnemonic/sh-t.mp3' }, confusable:['sh-f'],
-    lesson:'lesson-04', audio:'audio/sheng/t.mp3' },
+    needsRecording:true, recordNote:'特 读作 tè，是四声，字母要读平的', lesson:'lesson-04', audio:'audio/sheng/t.mp3' },
   { id:'sh-n', type:'shengmu', text:'n', hanzi:'讷', pic:'🚪',
     mnemonic:'一道门洞 n n n',
     mnemonicVoice:{ say:'一道门洞', audio:'audio/mnemonic/sh-n.mp3' }, confusable:['sh-m','sh-l','sh-h'],
-    lesson:'lesson-04', audio:'audio/sheng/n.mp3' },
+    needsRecording:true, recordNote:'讷 读作 nè，是四声，字母要读平的', lesson:'lesson-04', audio:'audio/sheng/n.mp3' },
   { id:'sh-l', type:'shengmu', text:'l', hanzi:'勒', pic:'🥢',
     mnemonic:'一根小棍 l l l',
     mnemonicVoice:{ say:'一根小棍', audio:'audio/mnemonic/sh-l.mp3' }, confusable:['sh-n','yu-i'],
@@ -118,7 +118,7 @@ const SOUNDS = [
     mnemonic:'像个二字 z z z',
     mnemonicVoice:{ say:'像个二字', audio:'audio/mnemonic/sh-z.mp3' }, confusable:['sh-zh','sh-c'],
     lesson:'lesson-07', audio:'audio/sheng/z.mp3' },
-  { id:'sh-c', type:'shengmu', text:'c', hanzi:'雌', pic:'🦔',
+  { id:'sh-c', type:'shengmu', text:'c', hanzi:'疵', pic:'🦔',
     mnemonic:'像个半圆 c c c',
     mnemonicVoice:{ say:'像个半圆', audio:'audio/mnemonic/sh-c.mp3' }, confusable:['sh-ch','sh-z','sh-s'],
     lesson:'lesson-07', audio:'audio/sheng/c.mp3' },
@@ -142,7 +142,7 @@ const SOUNDS = [
   { id:'sh-r', type:'shengmu', text:'r', hanzi:'日', pic:'☀️',
     mnemonic:'小苗出土 r r r',
     mnemonicVoice:{ say:'小苗出土', audio:'audio/mnemonic/sh-r.mp3' }, confusable:['sh-l','sh-n'],
-    lesson:'lesson-08', audio:'audio/sheng/r.mp3' },
+    needsRecording:true, recordNote:'日 读作 rì，是四声，字母要读平的', lesson:'lesson-08', audio:'audio/sheng/r.mp3' },
 
   { id:'sh-y', type:'shengmu', text:'y', hanzi:'衣', pic:'🌳',
     mnemonic:'像个树杈 y y y',
@@ -161,13 +161,13 @@ const SOUNDS = [
   { id:'yu-ei', type:'yunmu', sub:'fu', text:'ei', hanzi:'诶', pic:'🪓',
     mnemonic:'用力砍柴 ei ei ei',
     mnemonicVoice:{ say:'用力砍柴', audio:'audio/mnemonic/yu-ei.mp3' }, confusable:['yu-ie','yu-ai'],
-    lesson:'lesson-10', audio:'audio/yun/ei.mp3' },
+    needsRecording:true, recordNote:'诶 读作 éi，是二声，字母要读平的', lesson:'lesson-10', audio:'audio/yun/ei.mp3' },
   { id:'yu-ui', type:'yunmu', sub:'fu', text:'ui', hanzi:'威', pic:'🧣',
     mnemonic:'围上围巾 ui ui ui',
     mnemonicVoice:{ say:'围上围巾', audio:'audio/mnemonic/yu-ui.mp3' }, confusable:['yu-iu','yu-ei'],
     lesson:'lesson-10', audio:'audio/yun/ui.mp3' },
 
-  { id:'yu-ao', type:'yunmu', sub:'fu', text:'ao', hanzi:'熬', pic:'🧥',
+  { id:'yu-ao', type:'yunmu', sub:'fu', text:'ao', hanzi:'凹', pic:'🧥',
     mnemonic:'一件棉袄 ao ao ao',
     mnemonicVoice:{ say:'一件棉袄', audio:'audio/mnemonic/yu-ao.mp3' }, confusable:['yu-ou','yu-ai'],
     lesson:'lesson-11', audio:'audio/yun/ao.mp3' },
@@ -180,7 +180,7 @@ const SOUNDS = [
     mnemonicVoice:{ say:'游泳圈儿', audio:'audio/mnemonic/yu-iu.mp3' }, confusable:['yu-ui','yu-ou'],
     lesson:'lesson-11', audio:'audio/yun/iu.mp3' },
 
-  { id:'yu-ie', type:'yunmu', sub:'fu', text:'ie', hanzi:'耶', pic:'🍃',
+  { id:'yu-ie', type:'yunmu', sub:'fu', text:'ie', hanzi:'椰', pic:'🍃',
     mnemonic:'一片树叶 ie ie ie',
     mnemonicVoice:{ say:'一片树叶', audio:'audio/mnemonic/yu-ie.mp3' }, confusable:['yu-ei','yu-ve'],
     lesson:'lesson-12', audio:'audio/yun/ie.mp3' },
@@ -191,7 +191,7 @@ const SOUNDS = [
   { id:'yu-er', type:'yunmu', sub:'fu', text:'er', hanzi:'儿', pic:'👂',
     mnemonic:'一只耳朵 er er er',
     mnemonicVoice:{ say:'一只耳朵', audio:'audio/mnemonic/yu-er.mp3' }, confusable:['yu-e'],
-    lesson:'lesson-12', audio:'audio/yun/er.mp3' },
+    needsRecording:true, recordNote:'儿 读作 ér，是二声，字母要读平的', lesson:'lesson-12', audio:'audio/yun/er.mp3' },
 
   /* ── 前鼻韵母 (5) ───────────────────────────────────────────── */
   { id:'yu-an', type:'yunmu', sub:'qian', text:'an', hanzi:'安', pic:'🏛️',
@@ -216,7 +216,7 @@ const SOUNDS = [
     lesson:'lesson-13', audio:'audio/yun/vn.mp3' },
 
   /* ── 后鼻韵母 (4) ───────────────────────────────────────────── */
-  { id:'yu-ang', type:'yunmu', sub:'hou', text:'ang', hanzi:'昂', pic:'🐑',
+  { id:'yu-ang', type:'yunmu', sub:'hou', text:'ang', hanzi:'肮', pic:'🐑',
     mnemonic:'山羊昂头 ang ang ang',
     mnemonicVoice:{ say:'山羊昂头', audio:'audio/mnemonic/yu-ang.mp3' }, confusable:['yu-an','yu-eng'],
     lesson:'lesson-14', audio:'audio/yun/ang.mp3' },

@@ -283,7 +283,28 @@ for block in re.findall(r"\{ id: 'w-[^']+', word: '([^']+)'.*?examples: \[(.*?)\
         if word not in ex:
             fail(f"word {word}: example '{ex}' does not contain it")
 
-# ── 四声 ─# ── 四声 ──────────────────────────────────────────────────────
+# ── 呼读音 ──────────────────────────────────────────────
+#
+# A letter is synthesised from a 汉字, so it inherits that character's tone. A
+# letter has no tone — 「e」 must sound level, not like é — and the app teaches
+# 四声 on the same screen, so a rising letter contradicts the lesson directly.
+#
+# Where no level-tone character exists (f d t n r ei er, and eng ong before
+# them) the sound has to carry needsRecording instead, so 音频检查 lists it.
+
+for snd in sounds:
+    hz = snd.get("hanzi")
+    if not hz or snd.get("needsRecording"):
+        continue
+    if snd.get("type") == "zhengti":
+        continue                      # 整体认读 are syllables; they may be toned
+    default, _alts = readings(hz)
+    if default and default != 1:
+        fail(f"{snd['id']} is voiced by 「{hz}」, which reads in tone {default} — "
+             f"a letter has to sound level. Use a first-tone character, or mark "
+             f"it needsRecording.")
+
+# ── 四声 ─# ── 四声 ─# ── 四声 ──────────────────────────────────────────────────────
 #
 # A rule that shows tone marks must be able to play them. 「一声平，二声扬」
 # describes a sound; without an example she has never heard one.

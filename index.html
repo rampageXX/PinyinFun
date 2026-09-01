@@ -155,6 +155,29 @@
   </section>
 
   <!-- ── 家长 ─────────────────────────────────────────────────────── -->
+  <section id="word-list-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <div>
+          <div class="header-title">词语</div>
+          <div class="header-subtitle">学完一课，开一组新词</div>
+        </div>
+        <div class="header-subtitle">学过 <span id="word-studied-count">0</span></div>
+      </div>
+    </div>
+    <div class="screen-content" id="word-list-content"></div>
+  </section>
+
+  <section id="word-theme-screen" class="screen hidden">
+    <div class="screen-header">
+      <div class="screen-header-inner">
+        <button class="btn btn-small" onclick="navTo('word-list-screen')">← 词语</button>
+        <div class="header-title" id="word-theme-title">—</div>
+      </div>
+    </div>
+    <div class="screen-content" id="word-theme-content"></div>
+  </section>
+
   <section id="story-list-screen" class="screen hidden">
     <div class="screen-header">
       <div class="screen-header-inner">
@@ -217,6 +240,9 @@
     <button class="nav-btn" data-screen="map-screen" onclick="navTo('map-screen', this)">
       <span class="nav-icon">🗺</span><span class="nav-label">王国</span>
     </button>
+    <button class="nav-btn" data-screen="word-list-screen" onclick="navTo('word-list-screen', this)">
+      <span class="nav-icon">🗂</span><span class="nav-label">词语</span>
+    </button>
     <button class="nav-btn" data-screen="story-list-screen" onclick="navTo('story-list-screen', this)">
       <span class="nav-icon">📚</span><span class="nav-label">故事</span>
     </button>
@@ -239,6 +265,7 @@
   <script src="data/syllables.js"></script>
   <script src="data/stickers.js"></script>
   <script src="data/stories.js"></script>
+  <script src="data/words.js"></script>
   <script src="lib/strength.js"></script>
   <script src="lib/scoring.js"></script>
   <script src="lib/streaks.js"></script>
@@ -248,6 +275,7 @@
   <script src="lib/progress.js"></script>
   <script src="lib/stickers.js"></script>
   <script src="lib/stories.js"></script>
+  <script src="lib/words.js"></script>
   <script src="games/_ui.js"></script>
   <script src="games/listenPick.js"></script>
   <script src="games/toneTrain.js"></script>

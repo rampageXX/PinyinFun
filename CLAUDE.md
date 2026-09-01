@@ -89,6 +89,7 @@ data/
   syllables.js      # curriculum syllables, per-tone 汉字 + audio
   stickers.js       # 40 sticker definitions
   stories.js        # 故事 — five Tang poems, graded and unlocked by lesson
+  words.js          # GENERATED 词语 — 14 themes, one opening per lesson
   lessons/
     _registry.js    # registerLesson(), getLessonById(), lesson state
     lessons.js      # all 14 lessons — thin, they reference sounds by id
@@ -112,6 +113,7 @@ tools/
   gen_syllables.py  # generates data/syllables.js from the curriculum
   verify_data.py    # data integrity checks
   verify_stories.py # the 故事 difficulty ladder, measured not asserted
+  gen_words.py      # generates data/words.js from the theme tables
   gen_sw.py         # regenerates sw.js — run after gen_audio.py
 tests/test_app.py   # Playwright smoke test
 ```
@@ -204,6 +206,31 @@ A 声母-less syllable must never reach 拼一拼 — there is nothing to blend.
 拼读 (`b … ā … bā`), `preloadLesson(id)`, `speakFallback(text)`.
 iOS blocks audio until a user gesture — the 开始 button plays a silent buffer once
 to unlock playback for the session.
+
+## 词语
+
+A word book that grows: fourteen themes, one opening each time a lesson is
+cleared, running from 基础 and 数字 out to 学校. `clearedOn` is the same key 故事
+uses, so there is no second progression to keep in step, and the tab keeps
+opening for the whole run of the app rather than arriving at once.
+
+Every word carries up to two examples, because a character on its own is a shape
+— 手 is learnable as 洗手 and 小手. Examples render through `lib/ruby.js`, so the
+pinyin sits above the characters, and each one speaks.
+
+```bash
+python tools/gen_words.py     # then gen_audio.py, then gen_sw.py
+```
+
+Pinyin is derived with pypinyin, not typed, with a `NEUTRAL` table for the
+syllables that are genuinely neutral in speech — 耳朵 ěr duo, not ěr duǒ.
+
+Themes are **not** gated on being able to read their words. 人 and 大 are learned
+as shapes long before spelling matters, and gating on pinyin would put 数字
+behind 课13 for 三 and 四. The pinyin is there to lean on, not to earn.
+
+`verify_data.py` checks every word and example has audio, that ruby pairings
+balance, and that an example actually contains the word it illustrates.
 
 ## 故事
 

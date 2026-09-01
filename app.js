@@ -13,6 +13,8 @@ const RENDERERS = {
   'home-screen':        renderHome,
   'map-screen':         renderMap,
   'lesson-screen':      renderLesson,
+  'word-list-screen':   renderWordList,
+  'word-theme-screen':  renderWordTheme,
   'story-list-screen':  renderStoryList,
   'story-screen':       renderStory,
   'sticker-screen':     renderStickers,
@@ -691,6 +693,168 @@ function showResult(result) {
   }
 
   showScreen('result-screen');
+}
+
+/* ── 词语 ─────────────────────────────────────────────────────────── */
+
+let viewingThemeId = null;
+
+function renderWordList() {
+  const root = document.getElementById('word-list-content');
+  clearEl(root);
+  document.getElementById('word-studied-count').textContent = studiedWordCount();
+
+  wordThemesWithState().forEach(row => {
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.style.cssText =
+      `display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+       margin-bottom:10px; padding:14px 16px; min-height:76px;
+       cursor:${row.unlocked ? 'pointer' : 'default'};
+       opacity:${row.unlocked ? 1 : 0.5};`;
+
+    const icon = document.createElement('div');
+    icon.style.cssText = 'font-size:2rem; width:48px; text-align:center;';
+    icon.textContent = row.unlocked ? row.theme.pic : '🔒';
+
+    const mid = document.createElement('div');
+    mid.style.flex = '1';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:700;';
+    title.textContent = row.unlocked ? row.theme.name : '？？';
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:0.8rem; color:var(--ink-light); margin-top:2px;';
+    sub.textContent = row.unlocked
+      ? '学过 ' + row.studied + ' / ' + row.total
+      : '学完' + (getLessonById(row.theme.unlockAfter) || {}).title + ' 就能看';
+    mid.append(title, sub);
+
+    // A thin bar, the same shape the map uses for a lesson.
+    if (row.unlocked) {
+      const bar = document.createElement('div');
+      bar.style.cssText =
+        'height:6px; border-radius:999px; background:var(--paper-edge); margin-top:8px; overflow:hidden;';
+      const fill = document.createElement('div');
+      fill.style.cssText =
+        `height:100%; width:${Math.round(row.studied / row.total * 100)}%;
+         border-radius:999px; background:var(--leaf);`;
+      bar.appendChild(fill);
+      mid.appendChild(bar);
+    }
+
+    card.append(icon, mid);
+    if (row.unlocked) {
+      card.addEventListener('click', () => {
+        viewingThemeId = row.theme.id;
+        navTo('word-theme-screen');
+      });
+    }
+    root.appendChild(card);
+  });
+}
+
+function renderWordTheme() {
+  const theme = getWordTheme(viewingThemeId) || WORD_THEMES[0];
+  const root = document.getElementById('word-theme-content');
+  clearEl(root);
+  document.getElementById('word-theme-title').textContent = theme.pic + ' ' + theme.name;
+
+  theme.words.forEach(w => root.appendChild(buildWordEntry(w)));
+}
+
+/*
+ * One word, opening in place. A separate detail screen would be one more tap
+ * and one more back button for a child who is here to browse; the examples are
+ * the reason for the tab, so they should be a tap away, not two.
+ */
+function buildWordEntry(word) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.cssText = 'margin-bottom:10px; padding:0; overflow:hidden;';
+
+  const head = document.createElement('button');
+  head.style.cssText =
+    'display:flex; align-items:center; gap:14px; width:100%; text-align:left;' +
+    'border:none; background:none; padding:14px 16px; min-height:76px; cursor:pointer;';
+  head.setAttribute('aria-label', '打开 ' + word.word);
+
+  const pic = document.createElement('div');
+  pic.style.cssText = 'font-size:2rem; width:48px; text-align:center;';
+  pic.textContent = word.pic || '';
+
+  const mid = document.createElement('div');
+  // The word is what she is here for; at inherited size it read smaller than
+  // its own emoji.
+  mid.style.cssText = 'flex:1; font-size:1.7rem;';
+  mid.appendChild(rubyEl(word.word, word.pinyin));
+
+  const chev = document.createElement('span');
+  chev.style.cssText = 'font-size:1.1rem; color:var(--ink-light); flex:none;';
+  chev.textContent = '▾';
+
+  head.append(pic, mid, chev);
+  card.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'hidden';
+  body.style.cssText = 'padding:0 16px 16px; border-top:2px solid var(--paper-edge);';
+
+  // The word itself, big, with its own speaker.
+  const big = document.createElement('button');
+  big.style.cssText =
+    'display:flex; align-items:center; justify-content:center; gap:12px; width:100%;' +
+    'border:none; background:none; padding:16px 0 10px; cursor:pointer; min-height:64px;';
+  big.setAttribute('aria-label', '读一读 ' + word.word);
+  const horn = document.createElement('span');
+  horn.style.cssText = 'font-size:1.5rem;';
+  horn.textContent = '🔊';
+  const bigWord = document.createElement('span');
+  bigWord.style.cssText = 'font-size:2.6rem;';
+  bigWord.appendChild(rubyEl(word.word, word.pinyin));
+  big.append(horn, bigWord);
+  big.addEventListener('click', () => playAudio(word.audio));
+  body.appendChild(big);
+
+  const label = document.createElement('div');
+  label.className = 'section-label';
+  label.textContent = '这样用';
+  body.appendChild(label);
+
+  (word.examples || []).forEach(ex => {
+    const row = document.createElement('button');
+    row.style.cssText =
+      'display:flex; align-items:center; gap:12px; width:100%; text-align:left;' +
+      'border:none; background:var(--paper-warm); border-radius:14px; cursor:pointer;' +
+      'padding:10px 14px; margin-top:8px; min-height:64px; font-size:1.25rem;';
+    row.setAttribute('aria-label', '读一读 ' + ex.hanzi);
+    const eh = document.createElement('span');
+    eh.style.cssText = 'font-size:1.2rem; flex:none;';
+    eh.textContent = '🔊';
+    const ep = document.createElement('span');
+    ep.style.cssText = 'font-size:1.6rem; flex:none;';
+    ep.textContent = ex.pic || '';
+    const et = document.createElement('span');
+    et.appendChild(rubyEl(ex.hanzi, ex.pinyin));
+    row.append(eh, ep, et);
+    row.addEventListener('click', () => playAudio(ex.audio));
+    body.appendChild(row);
+  });
+
+  card.appendChild(body);
+
+  head.addEventListener('click', () => {
+    const opening = body.classList.contains('hidden');
+    body.classList.toggle('hidden', !opening);
+    chev.textContent = opening ? '▴' : '▾';
+    if (opening) {
+      playAudio(word.audio);
+      // Opening it and hearing it is what "studied" means here. Nothing tests
+      // these yet, so the count claims no more than that.
+      if (markWordStudied(word.id)) sfxCorrect();
+    }
+  });
+
+  return card;
 }
 
 /* ── 故事 ─────────────────────────────────────────────────────────── */

@@ -144,6 +144,7 @@ for block in re.findall(r"\{[^{}]*\}", sounds_src):
 
 lessons_src = read("lessons/lessons.js")
 stories_src = read("stories.js")
+words_src = read("words.js")
 lesson_blocks = re.split(r"registerLesson\(", lessons_src)[1:]
 
 lessons = []
@@ -188,7 +189,7 @@ if unclaimed:
 # ── ruby pairings ────────────────────────────────────────────────────
 
 pairs = re.findall(r"hanzi: ?'([^']+)', pinyin: ?'([^']*)'",
-                   lessons_src + stories_src)
+                   lessons_src + stories_src + words_src)
 for hanzi, pinyin in pairs:
     n_cjk = len(CJK.findall(hanzi))
     n_syl = len([p for p in pinyin.split() if p])
@@ -237,7 +238,7 @@ for sid, sm, jm, ym, base, lesson in syl_entries:
 # ── audio ────────────────────────────────────────────────────────────
 
 audio_refs = set()
-for src in (sounds_src, lessons_src, syl_src, stories_src):
+for src in (sounds_src, lessons_src, syl_src, stories_src, words_src):
     audio_refs.update(re.findall(r"audio:'(audio/[^']+)'", src))
     audio_refs.update(re.findall(r"audio: ?'(audio/[^']+)'", src))
 
@@ -257,7 +258,31 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
-# ── 四声 ──────────────────────────────────────────────────────
+# ── 词语 ──────────────────────────────────────────────────
+
+theme_ids = re.findall(r"id: 'wt-([^']+)'", words_src)
+if len(theme_ids) != len(set(theme_ids)):
+    fail(f"duplicate word theme ids: {theme_ids}")
+
+for tid, unlock in re.findall(r"id: 'wt-([^']+)'[^}]*?unlockAfter: '([^']+)'", words_src, re.S):
+    if unlock not in lesson_ids:
+        fail(f"word theme {tid} unlocks after unknown lesson {unlock}")
+
+word_ids = re.findall(r"id: 'w-([^']+)'", words_src)
+if len(word_ids) != len(set(word_ids)):
+    dupes_w = [i for i, n in Counter(word_ids).items() if n > 1]
+    fail(f"duplicate word ids: {dupes_w}")
+
+# An example has to contain the word it is an example of, or it teaches nothing
+# about it.
+for block in re.findall(r"\{ id: 'w-[^']+', word: '([^']+)'.*?examples: \[(.*?)\] \}",
+                        words_src, re.S):
+    word, exs = block
+    for ex in re.findall(r"hanzi: '([^']+)'", exs):
+        if word not in ex:
+            fail(f"word {word}: example '{ex}' does not contain it")
+
+# ── 四声 ─# ── 四声 ──────────────────────────────────────────────────────
 #
 # A rule that shows tone marks must be able to play them. 「一声平，二声扬」
 # describes a sound; without an example she has never heard one.
@@ -416,6 +441,7 @@ print(f"stickers    {len(stickers)}")
 print(f"audio refs  {len(audio_refs)}")
 print(f"ruby pairs  {len(pairs)}")
 print(f"stories     {len(story_ids)}")
+print(f"words       {len(word_ids)} in {len(theme_ids)} themes")
 print(f"offline     {sw_files} files precached by sw.js")
 
 for n in notes:

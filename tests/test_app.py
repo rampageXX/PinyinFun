@@ -66,7 +66,7 @@ def page(base_url):
 # ── content ──────────────────────────────────────────────────────────
 
 def test_content_loads(page):
-    counts = page.evaluate("""() => ({
+    counts = page.evaluate(r"""() => ({
         sounds: SOUNDS.length,
         lessons: LESSONS.length,
         syllables: SYLLABLES.length,
@@ -115,7 +115,7 @@ def test_never_offers_an_unmet_letter(page):
     A distractor from a future lesson asks the child to rule out a letter she
     has never seen. Check every lesson's pool, not just the first.
     """
-    leaks = page.evaluate("""() => {
+    leaks = page.evaluate(r"""() => {
         const bad = [];
         LESSONS.forEach(lesson => {
             const pool = availableSounds(lesson.order);
@@ -139,7 +139,7 @@ def test_never_offers_an_unmet_letter(page):
 
 
 def test_syllables_never_precede_their_parts(page):
-    bad = page.evaluate("""() => {
+    bad = page.evaluate(r"""() => {
         const order = {};
         SOUNDS.forEach(s => { if (!(s.text in order)) order[s.text] = lessonOrderOf(s); });
         return SYLLABLES.filter(sy => {
@@ -158,7 +158,7 @@ def test_todays_items_include_every_letter_the_lesson_teaches(page):
     without ü ever appearing, and 课8 teaches 8 letters of which only 4 could
     even enter the pool.
     """
-    missing = page.evaluate("""() => {
+    missing = page.evaluate(r"""() => {
         const bad = [];
         LESSONS.forEach(lesson => {
             const items = pickTodaysItems('2026-08-29', lesson);
@@ -176,7 +176,7 @@ def test_a_small_lesson_asks_all_of_its_letters(page):
     """课1 teaches three letters; one mission must touch all three."""
     page.click("#start-screen .btn-primary")
     assert run_scripted_mission(page, wrong_answers=0)
-    untested = page.evaluate("""() => {
+    untested = page.evaluate(r"""() => {
         const s = JSON.parse(localStorage.getItem('pinyin_strengths') || '{}');
         return getLessonById('lesson-01').sounds.filter(id => !(s[id] && s[id].attempts));
     }""")
@@ -229,7 +229,7 @@ def test_mission_completes_and_records_progress(page):
     page.click("#start-screen .btn-primary")
     assert run_mission(page), "mission never reached the result screen"
 
-    state = page.evaluate("""() => {
+    state = page.evaluate(r"""() => {
         const s = JSON.parse(localStorage.getItem('pinyin_strengths') || '{}');
         return {
             items: Object.keys(s).length,
@@ -301,7 +301,7 @@ def test_nine_out_of_ten_clears_but_eight_does_not(page):
     page.click("#start-screen .btn-primary")
 
     assert run_scripted_mission(page, wrong_answers=2)   # 8/10
-    after = page.evaluate("""() => ({
+    after = page.evaluate(r"""() => ({
         cleared: getLessonState().clearedOn || {},
         current: getLessonState().currentLessonId,
         unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.id),
@@ -312,7 +312,7 @@ def test_nine_out_of_ten_clears_but_eight_does_not(page):
 
     # Same child, same lesson, one better: that should be enough.
     assert run_scripted_mission(page, wrong_answers=1)   # 9/10
-    after = page.evaluate("""() => ({
+    after = page.evaluate(r"""() => ({
         cleared: getLessonState().clearedOn || {},
         current: getLessonState().currentLessonId,
     })""")
@@ -343,7 +343,7 @@ def test_replaying_a_cleared_lesson_does_not_drag_her_back(page):
     page.evaluate("() => setCurrentLesson('lesson-01')")        # go back to practise
     assert run_scripted_mission(page, wrong_answers=0)          # ace it again
 
-    after = page.evaluate("""() => ({
+    after = page.evaluate(r"""() => ({
         current: getLessonState().currentLessonId,
         unlocked: LESSONS.filter(isLessonUnlocked).map(l => l.order),
     })""")
@@ -359,7 +359,7 @@ def test_untested_letters_are_drawn_first(page):
     lets the remaining letters be reached at all.
     """
     page.click("#start-screen .btn-primary")
-    ok = page.evaluate("""() => {
+    ok = page.evaluate(r"""() => {
         const lesson = getLessonById('lesson-08');       // teaches 8 letters
         const strengths = {};
         lesson.sounds.slice(0, 3).forEach(id => { strengths[id] = { attempts: 2, strength: 80 }; });
@@ -406,7 +406,7 @@ def test_a_big_lesson_takes_more_than_one_sitting(page):
         page.evaluate("() => navTo('home-screen')")
         assert run_scripted_mission(page, wrong_answers=0)
 
-    after = page.evaluate("""() => ({
+    after = page.evaluate(r"""() => ({
         cleared: !!(getLessonState().clearedOn || {})['lesson-08'],
         untested: untestedSounds(getLessonById('lesson-08'), getStrengths()).length,
         current: getLessonState().currentLessonId,
@@ -423,7 +423,7 @@ def test_every_rule_can_be_read_aloud(page):
     needs a voice, and where it prints letters it needs a `say` in 呼读音
     characters, or the voice says the English letter names.
     """
-    state = page.evaluate("""() => {
+    state = page.evaluate(r"""() => {
         const silent = [], unsayable = [];
         LESSONS.forEach(l => {
             if (!l.rule) return;
@@ -441,7 +441,7 @@ def test_every_rule_can_be_read_aloud(page):
 
 def test_tapping_the_rule_plays_it(page):
     page.click("#start-screen .btn-primary")
-    played = page.evaluate("""async () => {
+    played = page.evaluate(r"""async () => {
         viewingLessonId = 'lesson-03';
         navTo('lesson-screen');
         const played = [];
@@ -462,7 +462,7 @@ def test_tapping_the_rule_plays_it(page):
 
 def test_every_mnemonic_can_be_chanted(page):
     """A 顺口溜 printed without a voice is decoration, not a memory aid."""
-    state = page.evaluate("""() => {
+    state = page.evaluate(r"""() => {
         const silent = [], leaky = [];
         SOUNDS.forEach(s => {
             if (!s.mnemonic) return;                 // 整体认读 carry a note instead
@@ -484,7 +484,7 @@ def test_the_mnemonic_chants_the_phrase_then_the_letter(page):
     which reads a bare "b" as "bee".
     """
     page.click("#start-screen .btn-primary")
-    result = page.evaluate("""async () => {
+    result = page.evaluate(r"""async () => {
         viewingLessonId = 'lesson-03';
         navTo('lesson-screen');
         const played = [];
@@ -522,7 +522,7 @@ def test_nothing_on_a_lesson_screen_is_silent(page):
     The intro is the first thing on the screen and the longest, and was the
     last thing here with no voice.
     """
-    state = page.evaluate("""() => {
+    state = page.evaluate(r"""() => {
         const silent = [], leaky = [];
         LESSONS.forEach(l => {
             if (!l.introVoice || !l.introVoice.audio) silent.push(l.id + ':intro');
@@ -539,7 +539,7 @@ def test_nothing_on_a_lesson_screen_is_silent(page):
 
 def test_tapping_the_intro_reads_it(page):
     page.click("#start-screen .btn-primary")
-    result = page.evaluate("""async () => {
+    result = page.evaluate(r"""async () => {
         viewingLessonId = 'lesson-01';
         navTo('lesson-screen');
         await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -563,7 +563,7 @@ def test_tapping_the_intro_reads_it(page):
 def test_the_first_story_is_open_before_anything_is_cleared(page):
     """A new tab full of padlocks is a dead room, and she taps the new icon first."""
     page.click("#start-screen .btn-primary")
-    state = page.evaluate("""() => ({
+    state = page.evaluate(r"""() => ({
         cleared: Object.keys(getLessonState().clearedOn || {}).length,
         open: storiesWithState().filter(r => r.unlocked).map(r => r.story.id),
     })""")
@@ -575,7 +575,7 @@ def test_the_first_story_is_open_before_anything_is_cleared(page):
 def test_the_new_controls_are_big_enough_to_hit(page):
     """64px, or she misses and hits the card behind it."""
     page.click("#start-screen .btn-primary")
-    sizes = page.evaluate("""async () => {
+    sizes = page.evaluate(r"""async () => {
         viewingLessonId = 'lesson-01';
         navTo('lesson-screen');
         await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -593,7 +593,7 @@ def test_the_new_controls_are_big_enough_to_hit(page):
 
 def test_each_tone_mark_has_a_sound_behind_it(page):
     """「一声平，二声扬」 describes a sound. She has to be able to hear one."""
-    state = page.evaluate("""() => {
+    state = page.evaluate(r"""() => {
         const bad = [];
         LESSONS.forEach(l => {
             if (!l.rule || !l.rule.tones) return;
@@ -611,7 +611,7 @@ def test_each_tone_mark_has_a_sound_behind_it(page):
 
 def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
     page.click("#start-screen .btn-primary")
-    result = page.evaluate("""async () => {
+    result = page.evaluate(r"""async () => {
         viewingLessonId = 'lesson-01';
         navTo('lesson-screen');
         await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -648,10 +648,89 @@ def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
     assert all(h >= 64 for h in result["heights"]), result["heights"]
 
 
-# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
+# ── 词语 ──────────────────────────────────────────────────
+
+def test_word_themes_open_one_per_lesson(page):
+    """The tab has to visibly grow, which is the whole point of it."""
+    page.click("#start-screen .btn-primary")
+    fresh = page.evaluate("() => wordThemesWithState().filter(r => r.unlocked).length")
+    assert fresh == 0, "nothing is open before a lesson is cleared"
+
+    opened = page.evaluate(r"""() => {
+        const st = getLessonState();
+        st.clearedOn = {};
+        [1, 2, 3].forEach(n => { st.clearedOn['lesson-0' + n] = getTodayString(); });
+        saveLessonState(st);
+        return wordThemesWithState().filter(r => r.unlocked).map(r => r.theme.name);
+    }""")
+    assert opened == ["基础", "数字", "身体"], opened
+
+    shape = page.evaluate(r"""() => ({
+        themes: WORD_THEMES.length,
+        words: WORDS.length,
+        everyThemeMapsToALesson: WORD_THEMES.every(t => !!getLessonById(t.unlockAfter)),
+        everyWordHasAudioAndExamples: WORDS.every(
+            w => w.audio && w.examples && w.examples.length >= 1),
+    })""")
+    assert shape["themes"] == 14
+    assert shape["words"] > 100
+    assert shape["everyThemeMapsToALesson"]
+    assert shape["everyWordHasAudioAndExamples"]
+
+
+def test_a_word_opens_to_examples_with_pinyin_above_them(page):
+    """A character alone is a shape; the examples are why the tab exists."""
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate(r"""async () => {
+        const st = getLessonState();
+        st.clearedOn = { 'lesson-03': getTodayString() };
+        saveLessonState(st);
+        viewingThemeId = 'wt-body';
+        navTo('word-theme-screen');
+
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push(decodeURIComponent(this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        const tick = () => new Promise(r => setTimeout(r, 70));
+        const root = document.getElementById('word-theme-content');
+        const head = [...root.querySelectorAll('button[aria-label^="打开"]')]
+            .filter(h => h.getAttribute('aria-label') === '打开 手')[0];
+
+        const before = studiedWordCount();
+        head.click();
+        await tick();
+        const card = head.parentElement;
+        const openPlayed = played.slice();
+
+        const exs = [...card.querySelectorAll('button[aria-label^="读一读"]')];
+        played.length = 0;
+        exs[1].click();
+        await tick();
+
+        HTMLMediaElement.prototype.play = orig;
+        return {
+            openPlayed, exPlayed: played.slice(),
+            labels: exs.map(b => b.getAttribute('aria-label')),
+            heights: exs.map(b => Math.round(b.getBoundingClientRect().height)),
+            rubyCount: card.querySelectorAll('ruby').length,
+            before, after: studiedWordCount(),
+        };
+    }""")
+    assert result["openPlayed"] == ["手.mp3"], result["openPlayed"]
+    assert result["exPlayed"] and result["exPlayed"][0].endswith(".mp3"), result["exPlayed"]
+    assert len(result["labels"]) >= 3, result["labels"]
+    assert all(h >= 64 for h in result["heights"]), result["heights"]
+    assert result["rubyCount"] >= 4, "every word and example carries pinyin above it"
+    assert result["after"] == result["before"] + 1, "opening a word counts it as studied"
+
+
+# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ─# ── 故事 ───────────────────────────────────────────────────
 
 def test_stories_load_with_art_and_audio(page):
-    counts = page.evaluate("""() => ({
+    counts = page.evaluate(r"""() => ({
         stories: STORIES.length,
         lines: STORIES.reduce((n, s) => n + s.lines.length, 0),
         withArt: STORIES.filter(s => s.art).length,
@@ -679,7 +758,7 @@ def test_a_story_is_locked_until_its_lesson_is_cleared(page):
         st.clearedOn = { 'lesson-04': getTodayString() };
         saveLessonState(st);
     }""")
-    after = page.evaluate("""() => ({
+    after = page.evaluate(r"""() => ({
         open: storiesWithState().filter(r => r.unlocked).map(r => r.story.id),
         first: STORIES[0].id,
     })""")
@@ -700,7 +779,7 @@ def test_reading_a_story_to_the_end_marks_it_read(page):
     lines = page.evaluate("() => document.querySelectorAll('#story-content .story-line').length")
     assert lines == 4, f"咏鹅 has four lines, rendered {lines}"
 
-    played = page.evaluate("""async () => {
+    played = page.evaluate(r"""async () => {
         const played = [];
         const orig = HTMLMediaElement.prototype.play;
         HTMLMediaElement.prototype.play = function () {
@@ -733,7 +812,7 @@ def test_read_pick_asks_her_to_read_the_tone_mark(page):
     different syllable would let her answer on the consonant alone.
     """
     page.click("#start-screen .btn-primary")
-    result = page.evaluate("""async () => {
+    result = page.evaluate(r"""async () => {
         navTo('game-screen');
         const syl = SYLLABLES.filter(s => s.base === 'ba')[0];   // four tones
         initReadPick(syl, syllablesUpToLesson(3), () => {});
@@ -773,7 +852,7 @@ def test_read_pick_needs_a_choice_then_a_confirm(page):
     thing she taps to hear is the answer she gave.
     """
     page.click("#start-screen .btn-primary")
-    result = page.evaluate("""async () => {
+    result = page.evaluate(r"""async () => {
         navTo('game-screen');
         let done = null;
         initReadPick(SYLLABLES.filter(s => s.base === 'ba')[0],
@@ -804,7 +883,7 @@ def test_read_pick_needs_a_choice_then_a_confirm(page):
 
 
 def test_every_lesson_gets_reading_practice(page):
-    counts = page.evaluate("""() => LESSONS.map(l => {
+    counts = page.evaluate(r"""() => LESSONS.map(l => {
         const items = pickTodaysItems('2026-08-29', l);
         const sched = buildSchedule(items, 'x' + l.id);
         return {
@@ -832,7 +911,7 @@ def test_audio_does_not_leak_between_lessons(page):
     hears bā in a lesson that has no 声母 in it at all.
     """
     page.click("#start-screen .btn-primary")
-    played = page.evaluate("""async () => {
+    played = page.evaluate(r"""async () => {
         const played = [];
         const orig = HTMLMediaElement.prototype.play;
         HTMLMediaElement.prototype.play = function () {
@@ -871,7 +950,7 @@ def test_finishing_a_mission_silences_whatever_was_playing(page):
     explain it.
     """
     page.click("#start-screen .btn-primary")
-    log = page.evaluate("""async () => {
+    log = page.evaluate(r"""async () => {
         const log = [];
         const play = HTMLMediaElement.prototype.play;
         const pause = HTMLMediaElement.prototype.pause;
@@ -914,7 +993,7 @@ def test_finishing_a_mission_silences_whatever_was_playing(page):
 def test_stopping_audio_cancels_a_pending_sequence(page):
     """stopAudio() must kill the gap timer too, not just the current clip."""
     page.click("#start-screen .btn-primary")
-    played = page.evaluate("""async () => {
+    played = page.evaluate(r"""async () => {
         const played = [];
         const orig = HTMLMediaElement.prototype.play;
         HTMLMediaElement.prototype.play = function () {
@@ -983,7 +1062,7 @@ def test_finishing_a_mission_silences_the_question(page):
 
 
 def test_every_sound_has_an_audio_file(page):
-    missing = page.evaluate("""async () => {
+    missing = page.evaluate(r"""async () => {
         const bad = [];
         for (const s of SOUNDS) {
             const res = await fetch(s.audio, { method: 'HEAD' });
@@ -996,7 +1075,7 @@ def test_every_sound_has_an_audio_file(page):
 
 def test_tone_marks_land_on_the_right_vowel(page):
     """标调规则: 有a不放过，没a找o e，i u 并列标在后."""
-    cases = page.evaluate("""() => ({
+    cases = page.evaluate(r"""() => ({
         'gua1': writeTone('gua', 1),
         'hao3': writeTone('hao', 3),
         'liu4': writeTone('liu', 4),

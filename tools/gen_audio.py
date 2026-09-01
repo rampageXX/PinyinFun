@@ -163,6 +163,17 @@ def build_manifest() -> dict:
         if audio and text and "/mnemonic/" in audio:
             manifest[audio] = text
 
+    # 词语: the word book, and the examples under each word. A word record
+    # carries `word`, an example carries `hanzi`; both are already in the
+    # fallback chain below.
+    words_js = ROOT / "data" / "words.js"
+    if words_js.exists():
+        for rec in parse_js_objects(words_js):
+            audio = rec.get("audio")
+            text = rec.get("hanzi") or rec.get("word")
+            if audio and text:
+                manifest[audio] = text
+
     # 故事: poem lines, their titles, and the 生词 under each.
     stories = ROOT / "data" / "stories.js"
     if stories.exists():

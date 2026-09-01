@@ -1270,8 +1270,11 @@ function renderAudioCheck() {
 
     const meta = document.createElement('div');
     meta.className = 'check-meta';
+    // A flagged sound needs a human voice, so say where the file goes. Without
+    // the path this reads as a complaint rather than something you can act on.
     meta.textContent = sound.needsRecording
-      ? sound.hanzi + ' · ' + (sound.recordNote || '需要自己录音')
+      ? (sound.recordNote || '需要自己录音') +
+        '　→ 录好放在 audio/overrides/' + sound.audio
       : '合成自「' + sound.hanzi + '」';
 
     const play = document.createElement('button');

@@ -198,8 +198,12 @@ exempt: they are syllables, and syllables have tones.
 
 **Nine sounds cannot be synthesised level and are flagged `needsRecording` in
 `data/sounds.js`:**
-- `f d t n r ei er` — no common character reads these in first tone
-  (佛 fó, 得 dé, 特 tè, 讷 nè, 日 rì, 诶 éi, 儿 ér)
+- `f d t n r ei er` — and this is not a search that failed. Scanning all 20,992
+  characters in the CJK block for a first-tone reading finds **zero** for fō,
+  tē, nē, rī, ēi and ēr, and one rare character for dē (嘚). The reason is that
+  those are not Mandarin syllables at all: no character can exist for a sound
+  the language does not have, which is exactly why the 呼读音 convention reaches
+  for a toned character in the first place. Only a human voice fixes these.
 - `eng` — maps to 鞥, a rare character the voice may mispronounce
 - `ong` — has *no* standalone syllable in Mandarin, so no character exists at all
 

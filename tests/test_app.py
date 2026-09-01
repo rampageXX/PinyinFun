@@ -653,8 +653,11 @@ def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
 def test_word_themes_open_one_per_lesson(page):
     """The tab has to visibly grow, which is the whole point of it."""
     page.click("#start-screen .btn-primary")
-    fresh = page.evaluate("() => wordThemesWithState().filter(r => r.unlocked).length")
-    assert fresh == 0, "nothing is open before a lesson is cleared"
+    # 基础 is free — a new tab must not open as a wall of padlocks, and 人 大 小
+    # are words she is already meeting in the 儿歌. Everything after it is earned.
+    fresh = page.evaluate(
+        "() => wordThemesWithState().filter(r => r.unlocked).map(r => r.theme.name)")
+    assert fresh == ["基础"], fresh
 
     opened = page.evaluate(r"""() => {
         const st = getLessonState();
@@ -668,14 +671,53 @@ def test_word_themes_open_one_per_lesson(page):
     shape = page.evaluate(r"""() => ({
         themes: WORD_THEMES.length,
         words: WORDS.length,
-        everyThemeMapsToALesson: WORD_THEMES.every(t => !!getLessonById(t.unlockAfter)),
+        // 基础 is free and has no lesson; every other theme names a real one
+        everyGatedThemeMapsToALesson: WORD_THEMES.every(
+            t => !t.unlockAfter || !!getLessonById(t.unlockAfter)),
+        freeThemes: WORD_THEMES.filter(t => !t.unlockAfter).length,
         everyWordHasAudioAndExamples: WORDS.every(
             w => w.audio && w.examples && w.examples.length >= 1),
     })""")
     assert shape["themes"] == 14
     assert shape["words"] > 100
-    assert shape["everyThemeMapsToALesson"]
+    assert shape["everyGatedThemeMapsToALesson"]
+    assert shape["freeThemes"] == 1, "exactly one theme is free"
     assert shape["everyWordHasAudioAndExamples"]
+
+
+def test_read_pick_is_skipped_when_it_would_be_a_coin_flip(page):
+    """课1 and 课2 share one syllable between them — bare e, two real tones.
+
+    我会读 offers one right answer and two wrong ones; with only two readings in
+    existence the question becomes a 50/50 guess, which teaches nothing and
+    inflates her score. It falls back to 听音选一选 there.
+    """
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate(r"""() => {
+        const out = {};
+        LESSONS.forEach(l => {
+            const items = pickTodaysItems('2026-09-01', l);
+            const sched = buildSchedule(items, 'x' + l.id);
+            const pool = syllablesUpToLesson(l.order);
+            out[l.order] = {
+                readPicks: sched.filter(q => q.type === 'readPick').length,
+                len: sched.length,
+                // every scheduled 我会读 must be able to offer three options
+                minOptions: Math.min.apply(null,
+                    sched.filter(q => q.type === 'readPick')
+                         .map(q => 1 + readDistractors(q.item, q.item.tones[0], 2, pool).length)
+                         .concat([99])),
+            };
+        });
+        return out;
+    }""")
+    assert result["1"]["readPicks"] == 0, "课1 cannot support a three-option reading question"
+    assert result["2"]["readPicks"] == 0, "课2 either"
+    for n in range(3, 15):
+        assert result[str(n)]["readPicks"] >= 1, f"课{n} should get reading practice"
+    for n, row in result.items():
+        assert row["len"] == 10, (n, row)
+        assert row["minOptions"] >= 3, f"课{n} offered only {row['minOptions']} options"
 
 
 def test_a_word_opens_to_examples_with_pinyin_above_them(page):
@@ -895,7 +937,10 @@ def test_every_lesson_gets_reading_practice(page):
         };
     })""")
     assert all(c["len"] == 10 for c in counts), [c for c in counts if c["len"] != 10]
-    assert all(c["read"] >= 1 for c in counts), [c for c in counts if c["read"] < 1]
+    # 课1 and 课2 share one syllable, so a three-option reading question is not
+    # possible there and 我会读 stands down — see the coin-flip test above.
+    assert all(c["read"] >= 1 for c in counts if c["order"] >= 3),         [c for c in counts if c["order"] >= 3 and c["read"] < 1]
+    assert all(c["read"] == 0 for c in counts if c["order"] <= 2),         [c for c in counts if c["order"] <= 2 and c["read"]]
     assert all(c["ok"] for c in counts), [c for c in counts if not c["ok"]]
 
 

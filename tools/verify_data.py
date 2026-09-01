@@ -264,8 +264,9 @@ theme_ids = re.findall(r"id: 'wt-([^']+)'", words_src)
 if len(theme_ids) != len(set(theme_ids)):
     fail(f"duplicate word theme ids: {theme_ids}")
 
-for tid, unlock in re.findall(r"id: 'wt-([^']+)'[^}]*?unlockAfter: '([^']+)'", words_src, re.S):
-    if unlock not in lesson_ids:
+for tid, unlock in re.findall(r"id: 'wt-([^']+)'[^}]*?unlockAfter: (?:'([^']+)'|null)",
+                              words_src, re.S):
+    if unlock and unlock not in lesson_ids:
         fail(f"word theme {tid} unlocks after unknown lesson {unlock}")
 
 word_ids = re.findall(r"id: 'w-([^']+)'", words_src)

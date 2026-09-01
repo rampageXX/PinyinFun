@@ -37,7 +37,7 @@ NEUTRAL = {
 # (theme id, 中文 name, the lesson that opens it, emoji, words)
 # a word is (字, emoji, [(example, emoji or "")])
 THEMES = [
- ("basic", "基础", 1, "🌱", [
+ ("basic", "基础", 0, "🌱", [
    ("人", "🧍", [("大人", "👨"), ("家人", "👪")]),
    ("大", "🐘", [("大山", "⛰️"), ("大树", "🌳")]),
    ("小", "🐣", [("小手", "✋"), ("小鸟", "🐦")]),
@@ -237,7 +237,10 @@ const WORD_THEMES = ["""]
     for tid, name, lesson, emoji, words in THEMES:
         lines.append("  {")
         lines.append(f"    id: 'wt-{tid}', name: '{name}', pic: '{emoji}',")
-        lines.append(f"    unlockAfter: 'lesson-{lesson:02d}',")
+        # lesson 0 means free from the start: a new tab that opens as a wall
+        # of padlocks is a dead room, and 基础 is the theme she can already use.
+        ua = "null" if lesson == 0 else f"'lesson-{lesson:02d}'"
+        lines.append(f"    unlockAfter: {ua},")
         lines.append("    words: [")
         for word, pic, examples in words:
             n_words += 1

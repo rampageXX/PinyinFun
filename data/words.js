@@ -16,7 +16,7 @@
 const WORD_THEMES = [
   {
     id: 'wt-basic', name: '基础', pic: '🌱',
-    unlockAfter: 'lesson-01',
+    unlockAfter: null,
     words: [
       { id: 'w-basic-人', word: '人', pinyin: 'rén', pic: '🧍', audio: 'audio/word/人.mp3',
         examples: [{ hanzi: '大人', pinyin: 'dà rén', pic: '👨', audio: 'audio/word/大人.mp3' }, { hanzi: '家人', pinyin: 'jiā rén', pic: '👪', audio: 'audio/word/家人.mp3' }] },

@@ -104,6 +104,12 @@ function buildSchedule(items, seed) {
   const sounds = items.sounds.filter(Boolean);
   const syllables = items.syllables.filter(Boolean);
 
+  // 我会读 offers one right answer and two wrong ones. 课1 and 课2 have a single
+  // syllable between them (bare e, two real tones), so the question would come
+  // down to a coin flip — which is not a reading test, and inflates her score.
+  const readings = syllables.reduce((n, s) => n + ((s.tones || []).length), 0);
+  const canRead = readings >= 3;
+
   // 拼一拼 puts a 声母 next to a 韵母, so it needs a syllable that has one.
   // 课1's syllables are bare 韵母 (e, ē/é) — drillable for tone, but there is
   // nothing to blend, so they are kept out of the blend pool.
@@ -134,7 +140,14 @@ function buildSchedule(items, seed) {
         return;
       }
     }
-    if (type === 'toneTrain' || type === 'readPick') {
+    if (type === 'readPick') {
+      if (!canRead) type = 'listenPick';
+      else {
+        schedule.push({ type, item: syllables[yi++ % syllables.length] });
+        return;
+      }
+    }
+    if (type === 'toneTrain') {
       if (!syllables.length) type = 'listenPick';
       else {
         schedule.push({ type, item: syllables[yi++ % syllables.length] });

@@ -349,6 +349,22 @@ of them — 麻 can be mā. The note exists to point the ear at the right place.
 `verify_data.py` fails a rule that prints tone marks with no `toneDemo`, or
 whose examples are out of tone order.
 
+## Recording a sound yourself
+
+Nine sounds cannot be synthesised correctly, so 家长 → 音频检查 has a 🎙 on each
+row: record it with the device's own microphone, and `lib/audio.js` plays that
+ahead of the synthesised file. Tap again to delete and fall back.
+
+`lib/recordings.js` keeps them in IndexedDB — they are blobs, and localStorage
+is a string store. They load into `recordingUrls` at boot as `blob:` URLs so
+`resolveSrc()` stays synchronous and nothing else has to learn about promises.
+Saving or deleting calls `forgetAudio()`, because elements are cached one per
+resolved src and the old clip would otherwise keep playing until a reload.
+
+Recordings are **device-local**: clearing browser data loses them and they do
+not travel to another iPad. Dropping an MP3 into `audio/overrides/` still works
+and is the durable route; the microphone is the quick one.
+
 ## Nothing on a lesson screen is silent
 
 She cannot read. Every block of text on a lesson screen has a 🔊 and reads on

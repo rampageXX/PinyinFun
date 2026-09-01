@@ -648,7 +648,73 @@ def test_tapping_a_tone_plays_that_tone_and_all_four_play_in_order(page):
     assert all(h >= 64 for h in result["heights"]), result["heights"]
 
 
-# ── 词语 ──────────────────────────────────────────────────
+# ── 录音 ──────────────────────────────────────────────────
+
+def test_a_recording_made_on_the_device_wins_and_persists(page):
+    """Nine letters can only be fixed by a human voice.
+
+    Seven of them because the flat reading is not a Mandarin syllable, so no
+    character and no pronunciation database has it. A recording made in 家长
+    has to beat the synthesised clip, survive a reload, and be removable.
+    """
+    page.click("#start-screen .btn-primary")
+    before = page.evaluate("() => resolveSrc('audio/sheng/f.mp3')")
+    assert before == "audio/sheng/f.mp3"
+
+    saved = page.evaluate(r"""async () => {
+        const blob = new Blob([new Uint8Array([1,2,3,4,5,6,7,8])], {type: 'audio/webm'});
+        await saveRecording('audio/sheng/f.mp3', blob);
+        return {
+            has: hasRecording('audio/sheng/f.mp3'),
+            src: resolveSrc('audio/sheng/f.mp3'),
+            count: recordedCount(),
+        };
+    }""")
+    assert saved["has"], "the recording should be registered"
+    assert saved["src"].startswith("blob:"), saved["src"]
+    assert saved["count"] == 1
+
+    # it has to still be there next time she opens the app
+    page.reload()
+    page.wait_for_function("() => typeof SOUNDS !== 'undefined'")
+    page.wait_for_function("() => hasRecording('audio/sheng/f.mp3')", timeout=10_000)
+    assert page.evaluate("() => resolveSrc('audio/sheng/f.mp3')").startswith("blob:")
+
+    # 音频检查 should say so rather than still calling it a problem
+    row = page.evaluate(r"""() => {
+        navTo('audio-check-screen');
+        const r = [...document.querySelectorAll('#check-list .check-row')]
+            .filter(x => x.querySelector('.check-letter').textContent === 'f')[0];
+        return r ? r.innerText.replace(/\s+/g, ' ').trim() : null;
+    }""")
+    assert row and "自己录的音" in row, row
+
+    after = page.evaluate(r"""async () => {
+        await deleteRecording('audio/sheng/f.mp3');
+        return { has: hasRecording('audio/sheng/f.mp3'),
+                 src: resolveSrc('audio/sheng/f.mp3'), count: recordedCount() };
+    }""")
+    assert after["has"] is False
+    assert after["src"] == "audio/sheng/f.mp3", "deleting falls back to the synthesised clip"
+    assert after["count"] == 0
+
+
+def test_every_unfixable_letter_is_flagged_with_a_reason(page):
+    """A flagged sound must say what is wrong and offer a way to fix it."""
+    state = page.evaluate(r"""() => {
+        const flagged = SOUNDS.filter(s => s.needsRecording);
+        return {
+            ids: flagged.map(s => s.id).sort(),
+            allHaveReasons: flagged.every(s => s.recordNote && s.recordNote.length > 4),
+        };
+    }""")
+    assert state["ids"] == sorted([
+        "sh-d", "sh-f", "sh-n", "sh-r", "sh-t", "yu-ei", "yu-eng", "yu-er", "yu-ong"
+    ]), state["ids"]
+    assert state["allHaveReasons"], "each flagged sound explains why"
+
+
+# ── 词语 ─# ── 词语 ──────────────────────────────────────────────────
 
 def test_word_themes_open_one_per_lesson(page):
     """The tab has to visibly grow, which is the whole point of it."""

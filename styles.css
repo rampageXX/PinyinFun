@@ -334,20 +334,45 @@ rt {
 
 /* ── Audio check screen ───────────────────────────────────────────── */
 
+/*
+ * Two rows, not one. A flagged sound now explains itself in a sentence, and
+ * with four controls beside it the text was being squeezed into an 87px column
+ * that wrapped every explanation to four lines. The letter and its reason get
+ * the full width; the buttons sit underneath.
+ */
 .check-row {
-  display: flex; align-items: center; gap: 12px;
+  display: grid;
+  grid-template-columns: 62px 1fr auto;
+  grid-template-areas: "letter meta actions";
+  align-items: center;
+  column-gap: 12px; row-gap: 8px;
   padding: 10px 12px;
   border: 2px solid var(--paper-edge);
   border-radius: 14px;
   margin-bottom: 8px;
   background: var(--paper);
 }
-.check-row.flagged { border-color: var(--stave); background: #FFF6F2; }
-.check-letter {
-  font-family: var(--font-pinyin); font-size: 1.6rem;
-  min-width: 62px; text-align: center;
+/* A flagged sound explains itself in a sentence, and four controls beside it
+   squeezed that into an 87px column. Only these rows need the second line. */
+.check-row.flagged {
+  grid-template-columns: 62px 1fr;
+  grid-template-areas: "letter meta" "letter actions";
+  padding: 12px;
+  border-color: var(--stave); background: #FFF6F2;
 }
-.check-meta { flex: 1; font-size: 0.76rem; color: var(--ink-light); line-height: 1.4; }
+.check-letter {
+  grid-area: letter;
+  font-family: var(--font-pinyin); font-size: 1.9rem;
+  text-align: center;
+}
+.check-meta {
+  grid-area: meta;
+  font-size: 0.78rem; color: var(--ink-light); line-height: 1.5;
+}
+.check-actions {
+  grid-area: actions;
+  display: flex; gap: 10px; align-items: center;
+}
 .check-play {
   width: 46px; height: 46px; border-radius: 50%; border: none;
   background: var(--sea-pale); color: var(--sea-deep);

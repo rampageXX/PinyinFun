@@ -9,7 +9,7 @@
  * generator, redeploy, and the old cache is dropped on activate.
  */
 
-const VERSION = '45f0eed54488';
+const VERSION = '54ef812efa34';
 const CACHE = 'pinyin-' + VERSION;
 
 /* The app. Must all cache, or we would ship a blank screen offline. */
@@ -23,6 +23,7 @@ const SHELL = [
   'icon-512.png',
   'lib/audio.js',
   'lib/progress.js',
+  'lib/recordings.js',
   'lib/ruby.js',
   'lib/scoring.js',
   'lib/selection.js',

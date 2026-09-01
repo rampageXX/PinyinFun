@@ -224,8 +224,10 @@
     </div>
     <div class="screen-content">
       <p style="color:var(--ink-mid); font-size:0.86rem; line-height:1.7; margin-bottom:18px;">
-        逐个播放，读得对就点 ✓，不对就点 ✗。标记为 ✗ 的会列在最下面，
-        自己录一段存到 <code>audio/overrides/</code> 里就会自动替换。
+        逐个播放，读得对就点 ✓，不对就点 ✗。读得不对的，点 🎙 用这台设备录一个，
+        马上就会用你录的音；再点一下 🗑 就删掉，回到合成音。
+        录音存在这台设备上，换设备要重录。也可以把 mp3 放到
+        <code>audio/overrides/</code> 里，效果一样。
       </p>
       <div id="check-list"></div>
       <div id="check-summary" class="card hidden" style="margin-top:18px;"></div>
@@ -259,6 +261,7 @@
   <!-- ── Scripts, in dependency order ─────────────────────────────── -->
   <script src="lib/storage.js"></script>
   <script src="lib/ruby.js"></script>
+  <script src="lib/recordings.js"></script>
   <script src="lib/audio.js"></script>
   <script src="lib/sfx.js"></script>
   <script src="data/sounds.js"></script>

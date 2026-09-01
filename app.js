@@ -1253,6 +1253,79 @@ function actionCard(title, body, buttonText, onClick) {
  * no test catches, so a parent listens once and marks failures. The two
  * sounds with no correct character to synthesise from float to the top. */
 
+/*
+ * Record this sound with the iPad's own microphone.
+ *
+ * Nine letters cannot be synthesised correctly and never will be — the flat
+ * reading of most of them is not a Mandarin syllable, so there is no character
+ * and no recording of it anywhere. Dropping files into audio/overrides/ works
+ * but needs a laptop and a redeploy; this needs a tap, and the voice she would
+ * rather hear is in the room.
+ */
+function buildRecordButton(sound) {
+  const btn = document.createElement('button');
+  btn.className = 'check-mark';
+
+  if (typeof recordingsSupported !== 'function' || !recordingsSupported()) {
+    btn.textContent = '🎙';
+    btn.disabled = true;
+    btn.style.opacity = '0.3';
+    btn.setAttribute('aria-label', '这个浏览器不能录音');
+    return btn;
+  }
+
+  let handle = null;
+  const mine = () => typeof hasRecording === 'function' && hasRecording(sound.audio);
+
+  function paint() {
+    btn.textContent = handle ? '⏹' : (mine() ? '🗑' : '🎙');
+    btn.style.color = handle ? 'var(--coral)' : '';
+    btn.setAttribute('aria-label', handle
+      ? '停止录音'
+      : mine() ? ('删除' + sound.text + ' 的录音') : ('录 ' + sound.text));
+  }
+  paint();
+
+  btn.addEventListener('click', async () => {
+    // Recording, deleting and re-recording are the same button in three states,
+    // because a row with four controls is already busy enough.
+    if (handle) {
+      const h = handle; handle = null;
+      btn.disabled = true;
+      try {
+        const blob = await h.stop();
+        await saveRecording(sound.audio, blob);
+        showToast(sound.text + ' 录好了，听听看 ▶', 2400);
+      } catch (e) {
+        showToast('没能保存这段录音', 2600);
+      }
+      btn.disabled = false;
+      paint();
+      renderCheckSummary();
+      return;
+    }
+
+    if (mine()) {
+      await deleteRecording(sound.audio);
+      showToast(sound.text + ' 的录音删掉了，又用合成音了', 2600);
+      paint();
+      renderCheckSummary();
+      return;
+    }
+
+    try {
+      handle = await startRecording();
+      paint();
+      showToast('正在录 ' + sound.text + '，说完再点一下 ⏹', 2600);
+    } catch (e) {
+      handle = null;
+      showToast('拿不到麦克风，检查一下浏览器权限', 3000);
+    }
+  });
+
+  return btn;
+}
+
 function renderAudioCheck() {
   const root = document.getElementById('check-list');
   clearEl(root);
@@ -1272,10 +1345,12 @@ function renderAudioCheck() {
     meta.className = 'check-meta';
     // A flagged sound needs a human voice, so say where the file goes. Without
     // the path this reads as a complaint rather than something you can act on.
-    meta.textContent = sound.needsRecording
-      ? (sound.recordNote || '需要自己录音') +
-        '　→ 录好放在 audio/overrides/' + sound.audio
-      : '合成自「' + sound.hanzi + '」';
+    const mine = typeof hasRecording === 'function' && hasRecording(sound.audio);
+    meta.textContent = mine
+      ? '用的是你自己录的音'
+      : sound.needsRecording
+        ? (sound.recordNote || '需要自己录音')
+        : '合成自「' + sound.hanzi + '」';
 
     const play = document.createElement('button');
     play.className = 'check-play';
@@ -1295,7 +1370,13 @@ function renderAudioCheck() {
     bad.setAttribute('aria-label', sound.text + ' 读得不对');
     bad.addEventListener('click', () => markAudio(sound.id, 'bad'));
 
-    row.append(letter, meta, play, ok, bad);
+    // The controls share a row of their own so the explanation can use the
+    // full width — four buttons beside it left the text an 87px column.
+    const actions = document.createElement('div');
+    actions.className = 'check-actions';
+    actions.append(play, buildRecordButton(sound), ok, bad);
+
+    row.append(letter, meta, actions);
     root.appendChild(row);
   });
 
@@ -1312,10 +1393,30 @@ function markAudio(soundId, verdict) {
 
 function renderCheckSummary() {
   const marks = getLocal('audio_check') || {};
-  const badIds = Object.keys(marks).filter(id => marks[id] === 'bad');
+  // A sound you have already recorded is not outstanding, however it was
+  // marked before — the recording is the answer to the ✗.
+  const badIds = Object.keys(marks).filter(id => {
+    if (marks[id] !== 'bad') return false;
+    const s = getSound(id);
+    return !(s && typeof hasRecording === 'function' && hasRecording(s.audio));
+  });
   const box = document.getElementById('check-summary');
+  const recorded = typeof recordedCount === 'function' ? recordedCount() : 0;
 
-  if (!badIds.length) { box.classList.add('hidden'); return; }
+  if (!badIds.length) {
+    if (!recorded) { box.classList.add('hidden'); return; }
+    clearEl(box);
+    box.classList.remove('hidden');
+    const done = document.createElement('div');
+    done.className = 'section-label';
+    done.textContent = '你自己录了 ' + recorded + ' 个音，正在用';
+    box.appendChild(done);
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:0.8rem; line-height:1.8; color:var(--ink-light);';
+    hint.textContent = '录音存在这台设备上，清空浏览器数据会丢失，换一台设备要重录。';
+    box.appendChild(hint);
+    return;
+  }
 
   clearEl(box);
   box.classList.remove('hidden');
@@ -1334,9 +1435,9 @@ function renderCheckSummary() {
     const strong = document.createElement('strong');
     strong.style.fontFamily = 'var(--font-pinyin)';
     strong.textContent = s.text;
-    const code = document.createElement('code');
-    code.textContent = 'audio/overrides/' + s.audio;
-    line.append(strong, ' → ', code);
+    const how = document.createElement('span');
+    how.textContent = ' → 点 🎙 录一个，或把文件放到 audio/overrides/' + s.audio;
+    line.append(strong, how);
     list.appendChild(line);
   });
   box.appendChild(list);
@@ -1370,6 +1471,9 @@ function showToast(msg, duration = 2200) {
 
 document.addEventListener('DOMContentLoaded', () => {
   probeOverrides(SOUNDS);
+  // Recordings made on this device win over everything else; load them before
+  // she can tap anything.
+  if (typeof loadRecordings === 'function') loadRecordings();
   initSfx();
   document.addEventListener('pointerdown', unlockAudio, { once: true });
 

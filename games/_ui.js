@@ -49,7 +49,7 @@ function bigSpeaker(area, srcs, label) {
   btn.addEventListener('click', play);
   wrap.append(btn, hint);
   area.appendChild(wrap);
-  setTimeout(play, 350);
+  playLater(350, play);
   return { el: btn, play };
 }
 
@@ -91,7 +91,7 @@ function flashResult(opts) {
   sfxWrong();
   if (picked) picked.classList.add('is-wrong');
   if (correctEl) correctEl.classList.add('is-correct');
-  if (replaySrc) setTimeout(() => playAudio(replaySrc), 400);
+  if (replaySrc) playLater(400, () => playAudio(replaySrc));
   setTimeout(onDone, 1600);
 }
 

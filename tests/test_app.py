@@ -1053,6 +1053,103 @@ def test_audio_does_not_leak_between_lessons(page):
         f"tapping a in 课1 should play only a, but played {played}")
 
 
+def test_the_blend_finishes_speaking_before_the_mission_moves_on(page):
+    """课4's t+u: onComplete sat on a fixed 2s timer while t…u…tū ran 4s.
+
+    The mission advanced mid-narration, and because questions replace each
+    other inside the same screen — and the next one was a blend with no audio
+    of its own — the leftover sequence talked over it with nothing to stop it.
+    The question must now outlive its own narration, and end in silence.
+    """
+    page.click("#start-screen .btn-primary")
+    result = page.evaluate(r"""async () => {
+        navTo('game-screen');
+        const sy = SYLLABLES.filter(s => s.shengmu === 't' && s.yunmu === 'u')[0];
+        const log = [];
+        const origPlay = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            const el = this;
+            log.push('play ' + (el.src || '').split('/').pop());
+            setTimeout(() => el.dispatchEvent(new Event('ended')), 300);
+            return Promise.resolve();
+        };
+        let completedAt = -1;
+        initBlendBuilder(sy, availableSounds(4), () => {
+            completedAt = log.length;
+            stopAudio();                      // what runNext does before the next question
+        });
+        const first = [...document.querySelectorAll('#game-area button')]
+            .filter(b => b.textContent.trim() === sy.shengmu)[0];
+        first.click();
+        await new Promise(r => setTimeout(r, 150));
+        const second = [...document.querySelectorAll('#game-area button')]
+            .filter(b => !b.disabled && /[ūúǔù]/.test(b.textContent.trim()))[0];
+        second.click();
+        await new Promise(r => setTimeout(r, 4000));
+        HTMLMediaElement.prototype.play = origPlay;
+        return {
+            log, completedAt,
+            heardTheSyllable: log.slice(0, completedAt).some(l => /play tu\d\.mp3/.test(l)),
+            playsAfterComplete: completedAt < 0 ? -1 : log.length - completedAt,
+        };
+    }""")
+    assert result["completedAt"] > 0, f"the question never completed: {result['log']}"
+    assert result["heardTheSyllable"], (
+        f"onComplete fired before she heard tū: {result['log']}")
+    assert result["playsAfterComplete"] == 0, (
+        f"audio started after the mission moved on: {result['log']}")
+
+
+def test_a_deferred_play_dies_with_the_screen_that_scheduled_it(page):
+    """setTimeout-then-play survives a screen change and starts audio on a page
+    that no longer shows the thing speaking. Every deferred play now goes
+    through playLater, which stopAudio cancels like everything else."""
+    page.click("#start-screen .btn-primary")
+    played = page.evaluate(r"""async () => {
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        playLater(80, () => playAudio('audio/yun/a.mp3'));
+        stopAudio();                              // leaving the screen
+        await new Promise(r => setTimeout(r, 300));
+        HTMLMediaElement.prototype.play = orig;
+        return played;
+    }""")
+    assert played == [], f"a cancelled deferred play still fired: {played}"
+
+
+def test_leaving_a_story_mid_gap_stays_silent(page):
+    """全部读一遍 pauses 260ms between lines. Leaving during that gap used to
+    let the next line start on whatever screen she had moved to."""
+    page.click("#start-screen .btn-primary")
+    played = page.evaluate(r"""async () => {
+        viewingStoryId = 'story-yonge';
+        navTo('story-screen');
+        const story = getStory('story-yonge');
+        const played = [];
+        const orig = HTMLMediaElement.prototype.play;
+        HTMLMediaElement.prototype.play = function () {
+            played.push((this.src || '').split('/').pop());
+            return Promise.resolve();
+        };
+        [...document.querySelectorAll('#story-content button')]
+            .filter(b => b.textContent.indexOf('全部') !== -1)[0].click();
+        await new Promise(r => setTimeout(r, 60));
+        getAudioEl(story.lines[0].audio).dispatchEvent(new Event('ended'));
+        // she leaves during the 260ms gap before line two
+        await new Promise(r => setTimeout(r, 100));
+        navTo('home-screen');
+        played.length = 0;
+        await new Promise(r => setTimeout(r, 500));
+        HTMLMediaElement.prototype.play = orig;
+        return played;
+    }""")
+    assert played == [], f"the story carried on after she left: {played}"
+
+
 def test_finishing_a_mission_silences_whatever_was_playing(page):
     """The result screen used to appear over a clip that kept playing.
 

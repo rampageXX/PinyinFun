@@ -976,7 +976,7 @@ function renderStory() {
       }
       const idx = i++;
       highlight(rows[idx]);
-      playAudio(story.lines[idx].audio, () => setTimeout(next, 260));
+      playAudio(story.lines[idx].audio, () => playLater(260, next));
     })();
   });
   root.appendChild(playAll);

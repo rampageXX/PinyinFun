@@ -29,6 +29,12 @@ function runDailyMission(lesson, onDone) {
   runNext();
 
   function runNext() {
+    // Questions replace each other inside the same screen, so the stopAudio
+    // in showScreen never runs between them. Whatever the last question was
+    // saying — a blend still narrating, a replay of the right answer — ends
+    // the moment the next one appears.
+    stopAudio();
+
     if (idx >= schedule.length) {
       finish();
       return;

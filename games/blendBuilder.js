@@ -154,6 +154,18 @@ function initBlendBuilder(syllable, pool, onComplete) {
     if (parts.every(p => chosen[p.role])) setTimeout(check, 420);
   }
 
+  // onComplete used to sit on a fixed 2s timer while the 拼读 sequence ran
+  // 4s, so the mission advanced mid-narration and t…u…tū carried on over the
+  // next question — which, being another blend, had no audio of its own to
+  // displace it. Advance when the sequence finishes; the timer is only a net
+  // in case the sequence is superseded and its onEnd never fires.
+  let advanced = false;
+  function advance(ok) {
+    if (advanced) return;
+    advanced = true;
+    onComplete({ correct: ok, timeMs: Date.now() - start });
+  }
+
   function check() {
     if (answered) return;
     const built = parts.map(p => chosen[p.role]).join('');
@@ -175,8 +187,9 @@ function initBlendBuilder(syllable, pool, onComplete) {
         'min-width:104px; height:80px; border-radius:16px; border:3px solid var(--paper-edge);' +
         'display:flex; align-items:center; justify-content:center;' +
         'font-family:var(--font-pinyin); font-size:2.2rem;';
-      setTimeout(() => playSequence(partSrcs(parts, syllable, target)), 400);
-      setTimeout(() => onComplete({ correct: false, timeMs: Date.now() - start }), 2200);
+      playLater(400, () => playSequence(partSrcs(parts, syllable, target),
+        () => setTimeout(() => advance(false), 500)));
+      setTimeout(() => advance(false), 9000);
       return;
     }
 
@@ -192,7 +205,9 @@ function initBlendBuilder(syllable, pool, onComplete) {
     result.style.background = 'var(--yes-fill)';
     result.style.color = 'var(--ink)';
 
-    // 前音轻短后音重: parts first, then the whole syllable.
+    // 前音轻短后音重: parts first, then the whole syllable — and the question
+    // stays until she has heard all of it. The 汉字 is the payoff for the
+    // blend, so it appears as the syllable lands, with a beat to take it in.
     playSequence(partSrcs(parts, syllable, target), () => {
       clearEl(revealed);
       const han = document.createElement('div');
@@ -200,9 +215,10 @@ function initBlendBuilder(syllable, pool, onComplete) {
       han.textContent = target.hanzi;
       revealed.appendChild(han);
       revealed.classList.add('animate-pop');
+      setTimeout(() => advance(true), 900);
     });
 
-    setTimeout(() => onComplete({ correct: true, timeMs: Date.now() - start }), 2000);
+    setTimeout(() => advance(true), 9000);
   }
 }
 

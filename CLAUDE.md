@@ -429,12 +429,22 @@ guards each one:
 6. **A lesson opens only once the one before it is cleared.**
    `isLessonUnlocked()` reads `clearedOn[prev]`, so the map can never show an
    island whose letters she has not reached yet. Clearing is the only key.
-7. **Audio never outlives the question that started it.** Elements are cached
-   one per file, so a listener left behind on a shared clip resurfaces in a
-   later lesson — 课3's bā blend shares `audio/yun/a.mp3` with 课1's a, which
-   once made tapping a in 课1 play bā. Every play detaches its own listeners
-   when superseded, and carries a `generation` so a stale callback cannot
-   restart a sequence from a lesson she has left.
+7. **Audio never outlives the question that started it.** This has broken
+   three separate ways, so the full rule matters:
+   - listeners: elements are cached one per file, so a handler left on a
+     shared clip resurfaces later — tapping a in 课1 once played 课3's bā.
+     Every play detaches its own listeners when superseded, and carries a
+     `generation` so a stale callback cannot restart a sequence.
+   - screens: `stopAudio()` lives in `showScreen()`, because not every screen
+     change goes through `navTo` — finishing a mission calls it directly.
+   - questions: mission questions replace each other **inside the same
+     screen**, so `runNext()` also stops audio, and a game must not hand back
+     control while still narrating — blendBuilder once advanced on a fixed 2s
+     timer under a 4s t…u…tū sequence, which then talked over the next
+     question. Advance when the narration ends, never in parallel with it.
+   Deferred plays go through `playLater()` in `lib/audio.js` — a raw
+   `setTimeout(() => playAudio(...))` is invisible to `stopAudio` and starts
+   audio on a page that no longer shows the thing speaking.
 
 ## What is left
 

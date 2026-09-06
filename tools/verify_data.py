@@ -258,7 +258,25 @@ for ref in sorted(needs_recording):
         notes.append(f"{ref} is synthesised from a character that may be wrong — "
                      f"check it in 家长 → 音频检查 and record audio/overrides/{ref} if needed")
 
-# ── 词语 ──────────────────────────────────────────────────
+# ── audio escapes ──────────────────────────────────────────
+#
+# A raw setTimeout that later starts audio is invisible to stopAudio: the timer
+# outlives the thing that scheduled it and starts sound on a question or screen
+# that no longer shows the thing speaking. It got in three times (the blend's
+# delayed sequence, the question autoplay, the story's line gap) before
+# playLater existed to make deferred plays cancellable. Convention decays;
+# this check does not. playLater's own setTimeout in lib/audio.js is the one
+# legitimate site.
+
+app_js_files = [ROOT / "app.js"] + sorted((ROOT / "games").glob("*.js"))     + [f for f in sorted((ROOT / "lib").glob("*.js")) if f.name != "audio.js"]
+for jsf in app_js_files:
+    src_js = jsf.read_text(encoding="utf-8")
+    for n, line in enumerate(src_js.splitlines(), 1):
+        if "setTimeout" in line and re.search(r"playAudio|playSequence|speakFallback", line):
+            fail(f"{jsf.relative_to(ROOT)}:{n} schedules audio with a raw setTimeout - "
+                 f"use playLater so stopAudio can cancel it")
+
+# ── 词语 ─# ── 词语 ──────────────────────────────────────────────────
 
 theme_ids = re.findall(r"id: 'wt-([^']+)'", words_src)
 if len(theme_ids) != len(set(theme_ids)):
